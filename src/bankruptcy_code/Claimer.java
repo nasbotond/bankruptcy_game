@@ -6,7 +6,7 @@ public class Claimer
 	private char id;
 	private double proportionalAllocation; // proportional rule
 	private double constrainedEAAllocation; // constrained equal awards rule
-	
+	private double constrainedELAllocation; // constrained equal losses rule
 	
 	public double getClaim() 
 	{
@@ -36,6 +36,16 @@ public class Claimer
 	public void setConstrainedEAAllocation(double constrainedEAAllocation) 
 	{
 		this.constrainedEAAllocation = constrainedEAAllocation;
+	}
+
+	public double getConstrainedELAllocation() 
+	{
+		return constrainedELAllocation;
+	}
+
+	public void setConstrainedELAllocation(double constrainedELAllocation) 
+	{
+		this.constrainedELAllocation = constrainedELAllocation;
 	}
 
 	public Claimer(char id, double claim)

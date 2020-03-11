@@ -9,6 +9,7 @@ public class Coalition
 	private double reference; // characteristic function
 	private double proportionalAllocation; // proportional rule
 	private double constrainedEAAllocation; // constrained equal awards rule
+	private double constrainedELAllocation; // constrained equal losses rule
 
 	public List<Claimer> getClaimers() 
 	{
@@ -47,6 +48,16 @@ public class Coalition
 	public void setConstrainedEAAllocation(double constrainedEAAllocation) 
 	{
 		this.constrainedEAAllocation = constrainedEAAllocation;
+	}
+
+	public double getConstrainedELAllocation() 
+	{
+		return constrainedELAllocation;
+	}
+
+	public void setConstrainedELAllocation(double constrainedELAllocation) 
+	{
+		this.constrainedELAllocation = constrainedELAllocation;
 	}
 
 	public Coalition(List<Claimer> claimers) 
