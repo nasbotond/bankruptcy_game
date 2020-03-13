@@ -12,6 +12,11 @@ public class Claimer
 	{
 		return claim;
 	}
+	
+	public void setClaim(double claim) 
+	{
+		this.claim = claim;
+	}
 
 	public char getId() 
 	{

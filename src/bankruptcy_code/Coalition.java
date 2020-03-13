@@ -10,6 +10,10 @@ public class Coalition
 	private double proportionalAllocation; // proportional rule
 	private double constrainedEAAllocation; // constrained equal awards rule
 	private double constrainedELAllocation; // constrained equal losses rule
+	
+	private double averagePropVariation;
+	private double averageCEAVariation;
+	private double averageCELVariation;
 
 	public List<Claimer> getClaimers() 
 	{
@@ -58,6 +62,36 @@ public class Coalition
 	public void setConstrainedELAllocation(double constrainedELAllocation) 
 	{
 		this.constrainedELAllocation = constrainedELAllocation;
+	}
+
+	public double getAveragePropVariation() 
+	{
+		return averagePropVariation;
+	}
+
+	public void setAveragePropVariation(double averagePropVariation) 
+	{
+		this.averagePropVariation = averagePropVariation;
+	}
+
+	public double getAverageCEAVariation() 
+	{
+		return averageCEAVariation;
+	}
+
+	public void setAverageCEAVariation(double averageCEAVariation) 
+	{
+		this.averageCEAVariation = averageCEAVariation;
+	}
+
+	public double getAverageCELVariation() 
+	{
+		return averageCELVariation;
+	}
+
+	public void setAverageCELVariation(double averageCELVariation) 
+	{
+		this.averageCELVariation = averageCELVariation;
 	}
 
 	public Coalition(List<Claimer> claimers) 

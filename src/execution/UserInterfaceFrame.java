@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -110,60 +111,47 @@ public class UserInterfaceFrame extends JFrame
 		    	{
 		    		try
 		    		{
-		    			List<Claimer> input = new ArrayList<Claimer>();
+		    			/*
+		    			int iterations = 1;
+		    			double estateInput = Double.parseDouble(estate.getText());
+		    			List<Claimer> claimers = new ArrayList<Claimer>();
 		    			
-		    			input.add(new Claimer('a', Double.parseDouble(agentA.getText())));
-		    			input.add(new Claimer('b', Double.parseDouble(agentB.getText())));
-		    			input.add(new Claimer('c', Double.parseDouble(agentC.getText())));
-		    			input.add(new Claimer('d', Double.parseDouble(agentD.getText())));
+		    			claimers.add(new Claimer('a', Double.parseDouble(agentA.getText())));
+		    			claimers.add(new Claimer('b', Double.parseDouble(agentB.getText())));
+		    			claimers.add(new Claimer('c', Double.parseDouble(agentC.getText())));
+		    			claimers.add(new Claimer('d', Double.parseDouble(agentD.getText())));
+		    			
 		    			
 		    			List<LinkedList<Claimer>> powerSet = new LinkedList<LinkedList<Claimer>>();
 		    			
-		    			for(int i = 1; i <= input.size(); i++)
+		    			for(int i = 1; i <= claimers.size(); i++)
 		    			{
-		    				powerSet.addAll((Collection<? extends LinkedList<Claimer>>) combination(input, i));
+		    				powerSet.addAll((Collection<? extends LinkedList<Claimer>>) combination(claimers, i));
 		    			}
 		    			
-		    			List<Coalition> coalitions = new ArrayList<Coalition>();
+		    			List<Coalition> coalitions = new ArrayList<Coalition>(); // master list of coalitions
 		    			
 		    			for(LinkedList<Claimer> entry : powerSet)
 		    			{
 		    				coalitions.add(new Coalition(entry));
 		    			}
 		    			
-		    			System.out.println(coalitions);
+		    			proportionalRuleClaimers(estateInput, claimers);
+		    			CEARuleClaimers(estateInput, claimers);
+		    			CELRuleClaimers(estateInput, claimers);
 		    			
-		    			// proportional rule (claimers)
-		    			double estateInput = Double.parseDouble(estate.getText());
-		    			double sum = 0.0;
-		    			
-		    			for(Claimer entry : input)
-		    			{
-		    				sum += entry.getClaim();
-		    			}
-		    			
-		    			for(Claimer entry : input)
-		    			{
-		    				entry.setProportionalAllocation(proportionalRuleClaimers(estateInput, sum, entry.getClaim()));
-		    			}
-		    			
-		    			CEARuleClaimers(estateInput, input);
-		    			CELRuleClaimers(estateInput, sum, input);
-		    			
-		    			for(Claimer entry : input)
-		    			{
-		    				System.out.println(entry.getId() + " prop: " + entry.getProportionalAllocation() + " CEA: " + entry.getConstrainedEAAllocation() + " CEL: " + entry.getConstrainedELAllocation());
-		    			}
-		    			
-		    			calculateReference(estateInput, coalitions, sum);
-		    			calculateProportionalProfit(coalitions);
-		    			calculateCEAProfit(coalitions);
-		    			calculateCELProfit(coalitions);
+		    			calculateReference(estateInput, coalitions, claimers);
+		    			calculateProportionalVariance(coalitions, iterations);
+		    			calculateCEAVariance(coalitions, iterations);
+		    			calculateCELVariance(coalitions, iterations);
 		    			
 		    			for(Coalition entry : coalitions)
 		    			{
 		    				System.out.println(entry.getId() + " ref: " + entry.getReference() + " prop: " + entry.getProportionalAllocation() + " CEA: " + entry.getConstrainedEAAllocation()+ " CEL: " + entry.getConstrainedELAllocation());
 		    			}
+		    			*/
+		    			
+		    			calculateAverageVariances();
 		    							    			
 					}
 		    		catch(Exception exception)  // TODO?
@@ -176,6 +164,105 @@ public class UserInterfaceFrame extends JFrame
 		    thread.start();		
 		}
 	}
+	
+	private void calculateAverageVariances()
+	{
+		double minClaim = Double.parseDouble(agentA.getText());
+		double maxClaim = Double.parseDouble(agentB.getText());
+		int numClaimers = Integer.parseInt(agentC.getText());
+		double estateInput = Double.parseDouble(estate.getText());
+		int iterations = 1;
+		
+		List<Claimer> claimers = new ArrayList<Claimer>(); // master list of claimers
+		
+		for(int i = 0; i < numClaimers; i++)
+		{
+			claimers.add(new Claimer((char)(97 + i), generateRandomClaim(minClaim, maxClaim)));
+		}
+		
+		List<LinkedList<Claimer>> powerSet = new LinkedList<LinkedList<Claimer>>();
+		
+		for(int i = 1; i <= claimers.size(); i++)
+		{
+			powerSet.addAll((Collection<? extends LinkedList<Claimer>>) combination(claimers, i));
+		}
+		
+		List<Coalition> coalitions = new ArrayList<Coalition>(); // master list of coalitions
+		
+		for(LinkedList<Claimer> entry : powerSet)
+		{
+			coalitions.add(new Coalition(entry));
+		}
+		
+		proportionalRuleClaimers(estateInput, claimers);
+		CEARuleClaimers(estateInput, claimers);
+		CELRuleClaimers(estateInput, claimers);
+		
+		calculateReference(estateInput, coalitions, claimers);
+		calculateProportionalVariance(coalitions, iterations);
+		calculateCEAVariance(coalitions, iterations);
+		calculateCELVariance(coalitions, iterations);
+		
+		// print(claimers, coalitions);
+		printAverages(coalitions);
+		System.out.println(coalitions);	
+		
+		int stop = 10;
+		while(stop > 0)
+		{
+			iterations++;
+			
+			for(int i = 0; i < numClaimers; i++)
+			{
+				claimers.get(i).setClaim(generateRandomClaim(minClaim, maxClaim));
+			}
+			
+			if(sum(claimers, "claims") > estateInput)
+			{
+				updateCoalitionClaimers(coalitions, claimers);
+				
+				proportionalRuleClaimers(estateInput, claimers);
+				CEARuleClaimers(estateInput, claimers);
+				CELRuleClaimers(estateInput, claimers);
+				
+				
+				calculateReference(estateInput, coalitions, claimers);
+				calculateProportionalVariance(coalitions, iterations);
+				calculateCEAVariance(coalitions, iterations);
+				calculateCELVariance(coalitions, iterations);
+				
+				System.out.println(stop);
+				// print(claimers, coalitions);
+				
+				printAverages(coalitions);
+				
+				stop--;
+			}
+		}	
+
+		// print(claimers, coalitions);
+	}
+	
+	private static void print(List<Claimer> list1, List<Coalition> list2)
+	{	
+		for(Claimer entry : list1)
+		{
+			System.out.println(entry.getId() + " prop: " + entry.getProportionalAllocation() + " CEA: " + entry.getConstrainedEAAllocation() + " CEL: " + entry.getConstrainedELAllocation());
+		}		
+		for(Coalition entry : list2)
+		{
+			System.out.println(entry.getId() + " ref: " + entry.getReference() + " prop: " + entry.getProportionalAllocation() + " CEA: " + entry.getConstrainedEAAllocation()+ " CEL: " + entry.getConstrainedELAllocation());
+		}
+	}
+	
+	private static void printAverages(List<Coalition> list2)
+	{
+		for(Coalition entry : list2)
+		{
+			System.out.println(entry.getId() + " ref: " + entry.getReference() + " prop avg.: " + entry.getAveragePropVariation() + " CEA avg.: " + entry.getAverageCEAVariation() + " CEL avg.: " + entry.getAverageCELVariation());
+		}
+	}
+	
 	
 	public static <T> List<List<T>> combination(List<T> values, int size)
 	{
@@ -211,9 +298,14 @@ public class UserInterfaceFrame extends JFrame
 	}
 	
 	// returns the amount obligated to a given agent based on parameters
-	public static double proportionalRuleClaimers(double estate, double sumOfClaims, double claim)
+	public static void proportionalRuleClaimers(double estate, List<Claimer> input)
 	{
-		return (claim*estate)/sumOfClaims;
+		double sumOfClaims = sum(input, "claims");
+		
+		for(Claimer claim : input)
+		{
+			claim.setProportionalAllocation((claim.getClaim()*estate)/sumOfClaims);
+		}
 	}
 	
 	// updates the CEAAllocation value for each agent
@@ -244,90 +336,147 @@ public class UserInterfaceFrame extends JFrame
 	}
 	
 	// updates the CELAllocation value for each agent
-	public static void CELRuleClaimers(double estate, double sum, List<Claimer> input)
+	public static void CELRuleClaimers(double estate, List<Claimer> allClaimers)
 	{
-		double equalLoss = (sum - estate)/input.size();
+		double sumOfClaims = sum(allClaimers, "claims");
 		
-		for(Claimer claimer : input)
+		double equalLoss = (sumOfClaims - estate)/allClaimers.size();
+		
+		for(Claimer claimer : allClaimers)
 		{
 			claimer.setConstrainedELAllocation(claimer.getClaim() - equalLoss);
 		}
 	}
 	
 	// v(s) function: used as reference point for SRD
-	public static void calculateReference(double estate, List<Coalition> coalitions, double sum)
+	public static void calculateReference(double estate, List<Coalition> coalitions, List<Claimer> allClaimers)
 	{
+		double sumOfAllClaims = sum(allClaimers, "claims");
+		
 		for(Coalition entry : coalitions)
 		{
-			double sumCurrentCoalition = 0;
-			for(Claimer claimer : entry.getClaimers())
-			{
-				sumCurrentCoalition += claimer.getClaim();
-			}
+			double sumCurrentCoalition = sum(entry.getClaimers(), "claims");			
 			
-			double maxUpperBound = estate - (sum - sumCurrentCoalition);
+			double maxUpperBound = estate - (sumOfAllClaims - sumCurrentCoalition);
 			entry.setReference(Math.max(0, maxUpperBound));
 		}
 	}
 	
 	// calculateReference must be called before this method to ensure we have the correct reference values
 	// calculates the profit (or surplus) each coalition earns with this rule
-	public static void calculateProportionalProfit(List<Coalition> coalitions)
+	public static void calculateProportionalVariance(List<Coalition> coalitions, int iteration)
 	{
 		for(Coalition entry : coalitions)
 		{
-			double sumPropClaimers = 0;
-			for(Claimer claimer : entry.getClaimers())
-			{
-				sumPropClaimers += claimer.getProportionalAllocation();
-			}
+			double sumPropClaimers = sum(entry.getClaimers(), "prop");
 			
-			entry.setProportionalAllocation(sumPropClaimers - entry.getReference());		
+			double propProfit = sumPropClaimers - entry.getReference();
+			
+			entry.setProportionalAllocation(propProfit);
+			
+			entry.setAveragePropVariation(entry.getAveragePropVariation()+((propProfit-entry.getAveragePropVariation())/iteration));
 		}
 	}
 	
 	// calculates the profit (or surplus) each coalition earns with this rule
-	public static void calculateCEAProfit(List<Coalition> coalitions)
+	public static void calculateCEAVariance(List<Coalition> coalitions, int iteration)
 	{
 		for(Coalition entry : coalitions)
 		{
-			double sumCEAClaimers = 0;
-			for(Claimer claimer : entry.getClaimers())
-			{
-				sumCEAClaimers += claimer.getConstrainedEAAllocation();
-			}
+			double sumCEAClaimers = sum(entry.getClaimers(), "CEA");
 			
 			double CEAProfit = sumCEAClaimers - entry.getReference();
 			if(CEAProfit < 0)
 			{
 				entry.setConstrainedEAAllocation(0);
+				entry.setAverageCEAVariation(entry.getAverageCEAVariation()+((0-entry.getAverageCEAVariation())/iteration));
 			}
 			else
 			{
 				entry.setConstrainedEAAllocation(CEAProfit);
+				entry.setAverageCEAVariation(entry.getAverageCEAVariation()+((CEAProfit-entry.getAverageCEAVariation())/iteration));
 			}	
 		}
 	}
 	
-	public static void calculateCELProfit(List<Coalition> coalitions)
+	public static void calculateCELVariance(List<Coalition> coalitions, int iteration)
 	{
 		for(Coalition entry : coalitions)
 		{
-			double sumCELClaimers = 0;
-			for(Claimer claimer : entry.getClaimers())
-			{
-				sumCELClaimers += claimer.getConstrainedELAllocation();
-			}
+			double sumCELClaimers = sum(entry.getClaimers(), "CEL");
 			
 			double CELProfit = sumCELClaimers - entry.getReference();
 			if(CELProfit < 0)
 			{
 				entry.setConstrainedELAllocation(0);
+				entry.setAverageCELVariation(entry.getAverageCELVariation()+((0-entry.getAverageCELVariation())/iteration));
 			}
 			else
 			{
 				entry.setConstrainedELAllocation(CELProfit);
+				entry.setAverageCELVariation(entry.getAverageCELVariation()+((CELProfit-entry.getAverageCELVariation())/iteration));
 			}	
 		}
 	}
+	
+	private static double generateRandomClaim(double min, double max)
+	{
+		if (min >= max)
+		{
+	        throw new IllegalArgumentException("max must be greater than min");
+	    }
+		
+	    Random r = new Random();
+	    
+	    return min + (max - min) * r.nextDouble();
+	}
+	
+	// finds the sum of the Claims in a given coalition
+	private static double sum(List<Claimer> list, String identifier)
+	{
+		double sumOfElements = 0;
+		
+		switch(identifier)
+		{
+			case "claims":
+				for(Claimer element : list)
+				{
+					sumOfElements += element.getClaim();
+				}
+				break;
+			case "prop":
+				for(Claimer element : list)
+				{
+					sumOfElements += element.getProportionalAllocation();
+				}
+				break;
+			case "CEA":
+				for(Claimer element : list)
+				{
+					sumOfElements += element.getConstrainedEAAllocation();
+				}
+				break;
+			case "CEL":
+				for(Claimer element : list)
+				{
+					sumOfElements += element.getConstrainedELAllocation();
+				}
+				break;		
+		}
+			
+		return sumOfElements;
+	}
+	
+	// update the claims of every claimer in the coalition lists
+	private static void updateCoalitionClaimers(List<Coalition> coalitions, List<Claimer> claimers)
+	{
+		for(Coalition coalition : coalitions)
+		{
+			for(Claimer claimer : coalition.getClaimers())
+			{
+				claimer.setClaim(claimers.get(claimers.indexOf(claimer)).getClaim());
+			}
+		}
+	}
 }
+ 
