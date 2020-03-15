@@ -38,10 +38,12 @@ public class UserInterfaceFrame extends JFrame
 	private JLabel agentDLabel;
 	
 	private JButton runButton;
+	private JButton stopButton;
 	
 	private JPanel canvasPanel;
 	private JPanel inputsPanel;
 	private JPanel buttonsPanel;
+	private boolean stop = false;
 	
 	
 	public UserInterfaceFrame()
@@ -58,7 +60,12 @@ public class UserInterfaceFrame extends JFrame
 		runButton = new JButton("calculate");
 		runButton.addActionListener(new RunButtonActionListener());
 		
+		// stop button action
+		stopButton = new JButton("stop");
+		stopButton.addActionListener(new StopButtonActionListener());
+		
 		buttonsPanel.add(runButton);
+		buttonsPanel.add(stopButton);
 		
 		// inputs
 		
@@ -165,6 +172,31 @@ public class UserInterfaceFrame extends JFrame
 		}
 	}
 	
+	private class StopButtonActionListener implements ActionListener 
+	{
+		@Override
+		public void actionPerformed(ActionEvent event)
+		{	
+			Thread thread = new Thread(new Runnable()
+		    {
+		    	@Override
+		    	public void run()
+		    	{
+		    		try
+		    		{
+		    			stop = true;		    							    			
+					}
+		    		catch(Exception exception)  // TODO?
+		    		{
+						exception.printStackTrace();
+					}
+		    	}
+		    });
+		    
+		    thread.start();		
+		}
+	}
+	
 	private void calculateAverageVariances()
 	{
 		double minClaim = Double.parseDouble(agentA.getText());
@@ -207,8 +239,9 @@ public class UserInterfaceFrame extends JFrame
 		printAverages(coalitions);
 		System.out.println(coalitions);	
 		
-		int stop = 10;
-		while(stop > 0)
+		// int stop = 10;
+		// while(stop > 0)
+		while(stop == false)
 		{
 			iterations++;
 			
@@ -236,7 +269,7 @@ public class UserInterfaceFrame extends JFrame
 				
 				printAverages(coalitions);
 				
-				stop--;
+				// stop--;
 			}
 		}	
 
