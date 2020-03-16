@@ -1,11 +1,13 @@
 package execution;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -17,6 +19,8 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import bankruptcy_code.Claimer;
@@ -43,6 +47,13 @@ public class UserInterfaceFrame extends JFrame
 	private JPanel canvasPanel;
 	private JPanel inputsPanel;
 	private JPanel buttonsPanel;
+	
+	private JPanel consolePanel;
+	private JTextArea consoleOutput;
+	
+	private JLabel numIterations;
+	
+	private int iterations;
 	private boolean stop = false;
 	
 	
@@ -97,7 +108,39 @@ public class UserInterfaceFrame extends JFrame
 		canvasPanel.add(inputsPanel, BorderLayout.NORTH);
 		canvasPanel.add(buttonsPanel, BorderLayout.CENTER);
 		
+		// numIterations display:
+		//
+		numIterations = new JLabel("iterations: " + iterations);
+		numIterations.setHorizontalAlignment(JLabel.CENTER);
+		buttonsPanel.add(numIterations);
+		//		
+				
 		
+		// console panel:
+		//
+		/*
+		consolePanel = new JPanel();
+		consolePanel.setBackground(Color.WHITE);
+						
+		consoleOutput = new JTextArea(33, 65);
+		consoleOutput.setEditable(false);
+		JScrollPane scrollPane = new JScrollPane(consoleOutput);		
+						
+		PrintStream printStream = new PrintStream(new CustomOutputStream(consoleOutput));
+					
+		// keeps reference of standard output stream
+		// standardOut = System.out;
+				         
+		// re-assigns standard output stream and error output stream
+		System.setOut(printStream);
+		System.setErr(printStream);
+						
+		consolePanel.add(scrollPane);
+		//
+		
+		canvasPanel.add(consolePanel, BorderLayout.SOUTH);
+		
+		*/
 		this.add(canvasPanel);
 		
 		this.setPreferredSize(new Dimension(700, 675)); // 525, 750
@@ -203,7 +246,9 @@ public class UserInterfaceFrame extends JFrame
 		double maxClaim = Double.parseDouble(agentB.getText());
 		int numClaimers = Integer.parseInt(agentC.getText());
 		double estateInput = Double.parseDouble(estate.getText());
-		int iterations = 1;
+		iterations = 1;
+		numIterations.setText("iterations: " + iterations);  // update iterations label in UI
+		
 		
 		List<Claimer> claimers = new ArrayList<Claimer>(); // master list of claimers
 		
@@ -236,15 +281,13 @@ public class UserInterfaceFrame extends JFrame
 		calculateCELVariance(coalitions, iterations);
 		
 		// print(claimers, coalitions);
-		printAverages(coalitions);
-		System.out.println(coalitions);	
+		// printAverages(coalitions);
+		// System.out.println(coalitions);	
 		
 		// int stop = 10;
 		// while(stop > 0)
 		while(stop == false)
-		{
-			iterations++;
-			
+		{		
 			for(int i = 0; i < numClaimers; i++)
 			{
 				claimers.get(i).setClaim(generateRandomClaim(minClaim, maxClaim));
@@ -252,6 +295,9 @@ public class UserInterfaceFrame extends JFrame
 			
 			if(sum(claimers, "claims") > estateInput)
 			{
+				iterations++;
+				numIterations.setText("iterations: " + iterations);  // update iterations label in UI
+				
 				updateCoalitionClaimers(coalitions, claimers);
 				
 				proportionalRuleClaimers(estateInput, claimers);
@@ -264,10 +310,13 @@ public class UserInterfaceFrame extends JFrame
 				calculateCEAVariance(coalitions, iterations);
 				calculateCELVariance(coalitions, iterations);
 				
-				System.out.println(stop);
+				// System.out.println(stop);
 				// print(claimers, coalitions);
 				
-				printAverages(coalitions);
+				if(iterations % 10 == 0)
+				{
+					printAverages(coalitions, iterations);					
+				}
 				
 				// stop--;
 			}
@@ -288,8 +337,9 @@ public class UserInterfaceFrame extends JFrame
 		}
 	}
 	
-	private static void printAverages(List<Coalition> list2)
+	private static void printAverages(List<Coalition> list2, int iter)
 	{
+		System.out.println("iteration: " + iter);
 		for(Coalition entry : list2)
 		{
 			System.out.println(entry.getId() + " ref: " + entry.getReference() + " prop avg.: " + entry.getAveragePropVariation() + " CEA avg.: " + entry.getAverageCEAVariation() + " CEL avg.: " + entry.getAverageCELVariation());
