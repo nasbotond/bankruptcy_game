@@ -7,6 +7,7 @@ public class Claimer
 	private double proportionalAllocation; // proportional rule
 	private double constrainedEAAllocation; // constrained equal awards rule
 	private double constrainedELAllocation; // constrained equal losses rule
+	private double shapleyValue;
 	
 	public double getClaim() 
 	{
@@ -18,7 +19,7 @@ public class Claimer
 		this.claim = claim;
 	}
 
-	public char getId() 
+	public Character getId() 
 	{
 		return id;
 	}	
@@ -51,6 +52,16 @@ public class Claimer
 	public void setConstrainedELAllocation(double constrainedELAllocation) 
 	{
 		this.constrainedELAllocation = constrainedELAllocation;
+	}
+
+	public double getShapleyValue() 
+	{
+		return shapleyValue;
+	}
+
+	public void setShapleyValue(double shapleyValue) 
+	{
+		this.shapleyValue = shapleyValue;
 	}
 
 	public Claimer(char id, double claim)

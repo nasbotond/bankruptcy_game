@@ -11,6 +11,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -161,7 +162,7 @@ public class UserInterfaceFrame extends JFrame
 		    	{
 		    		try
 		    		{
-		    			/*
+		    			
 		    			int iterations = 1;
 		    			double estateInput = Double.parseDouble(estate.getText());
 		    			List<Claimer> claimers = new ArrayList<Claimer>();
@@ -194,14 +195,23 @@ public class UserInterfaceFrame extends JFrame
 		    			calculateProportionalVariance(coalitions, iterations);
 		    			calculateCEAVariance(coalitions, iterations);
 		    			calculateCELVariance(coalitions, iterations);
+		    			double[] shap = calculateShapleyValues(claimers, coalitions);
+		    			
 		    			
 		    			for(Coalition entry : coalitions)
 		    			{
 		    				System.out.println(entry.getId() + " ref: " + entry.getReference() + " prop: " + entry.getProportionalAllocation() + " CEA: " + entry.getConstrainedEAAllocation()+ " CEL: " + entry.getConstrainedELAllocation());
-		    			}
-		    			*/
+		    			}		    			
 		    			
-		    			calculateAverageVariances();
+		    			System.out.println("Started...");
+		    			System.out.println(shap.length);
+		    			for(int j = 0; j < shap.length; j++)
+		    			{
+		    				System.out.println(shap[j]);
+		    			}
+		    			System.out.println("Ended...");
+		    			
+		    			// calculateAverageVariances();
 		    							    			
 					}
 		    		catch(Exception exception)  // TODO?
@@ -278,7 +288,7 @@ public class UserInterfaceFrame extends JFrame
 		calculateReference(estateInput, coalitions, claimers);
 		calculateProportionalVariance(coalitions, iterations);
 		calculateCEAVariance(coalitions, iterations);
-		calculateCELVariance(coalitions, iterations);
+		calculateCELVariance(coalitions, iterations);	
 		
 		// print(claimers, coalitions);
 		// printAverages(coalitions);
@@ -378,6 +388,81 @@ public class UserInterfaceFrame extends JFrame
 		combination.addAll(combination(subSet, size));
 		
 		return combination;
+	}
+	
+	// generate all permutations of the input list
+	private static <E> List<List<E>> generatePerm(List<E> original) 
+	{
+	     if (original.isEmpty()) 
+	     {
+	       List<List<E>> result = new ArrayList<>(); 
+	       result.add(new ArrayList<>()); 
+	       return result; 
+	     }
+	     E firstElement = original.remove(0);
+	     List<List<E>> returnValue = new ArrayList<>();
+	     List<List<E>> permutations = generatePerm(original);
+	     for (List<E> smallerPermutated : permutations) 
+	     {
+	       for (int index=0; index <= smallerPermutated.size(); index++) 
+	       {
+	         List<E> temp = new ArrayList<>(smallerPermutated);
+	         temp.add(index, firstElement);
+	         returnValue.add(temp);
+	       }
+	     }
+	     return returnValue;
+	}
+	
+	// calculates the Shapley values of the claimers and puts them in a double array
+	public static double[] calculateShapleyValues(List<Claimer> claimers, List<Coalition> coalitions)
+	{
+		List<Claimer> claimersClone = new ArrayList<Claimer>(claimers);
+		List<List<Claimer>> permutations = generatePerm(claimersClone);
+		
+		double[] shapleys = new double[claimers.size()];
+		List<Claimer> currentCoalition = new ArrayList<Claimer>();
+		double previousReference = 0;
+		
+		for(List<Claimer> permutation : permutations)
+		{
+			for(int i = 0; i < claimers.size(); i++)			
+			{		
+				currentCoalition.add(permutation.get(i)); // needs to be sorted so we can match it with the list of coalitions
+				Collections.sort(currentCoalition, new Comparator<Claimer>() {
+				    public int compare(Claimer c1, Claimer c2) {
+				        return c1.getId().compareTo(c2.getId());
+				    }
+				});
+				
+				for(Coalition coalition : coalitions)
+				{
+					if(coalition.getClaimers().equals(currentCoalition)) 
+					{
+						if(currentCoalition.size() == 1)
+						{
+							shapleys[claimers.indexOf(permutation.get(i))] += coalition.getReference();
+						}
+						else
+						{
+							shapleys[claimers.indexOf(permutation.get(i))] += (coalition.getReference() - previousReference);
+						}
+						previousReference = coalition.getReference();
+					}
+				}
+			}
+			currentCoalition.clear();
+			previousReference = 0;
+		}
+		
+		
+		for(int j = 0; j < shapleys.length; j++)
+		{
+			shapleys[j] = shapleys[j]/permutations.size();
+		}
+		
+		
+		return shapleys;
 	}
 	
 	// returns the amount obligated to a given agent based on parameters
