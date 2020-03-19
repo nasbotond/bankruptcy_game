@@ -10,10 +10,12 @@ public class Coalition
 	private double proportionalAllocation; // proportional rule
 	private double constrainedEAAllocation; // constrained equal awards rule
 	private double constrainedELAllocation; // constrained equal losses rule
+	private double shapleyValueAllocation;
 	
 	private double averagePropVariation;
 	private double averageCEAVariation;
 	private double averageCELVariation;
+	private double averageShapleyValueVariation;
 
 	public List<Claimer> getClaimers() 
 	{
@@ -64,6 +66,16 @@ public class Coalition
 		this.constrainedELAllocation = constrainedELAllocation;
 	}
 
+	public double getShapleyValueAllocation() 
+	{
+		return shapleyValueAllocation;
+	}
+
+	public void setShapleyValueAllocation(double shapleyValueAllocation) 
+	{
+		this.shapleyValueAllocation = shapleyValueAllocation;
+	}
+
 	public double getAveragePropVariation() 
 	{
 		return averagePropVariation;
@@ -92,6 +104,16 @@ public class Coalition
 	public void setAverageCELVariation(double averageCELVariation) 
 	{
 		this.averageCELVariation = averageCELVariation;
+	}
+
+	public double getAverageShapleyValueVariation() 
+	{
+		return averageShapleyValueVariation;
+	}
+
+	public void setAverageShapleyValueVariation(double averageShapleyValueVariation) 
+	{
+		this.averageShapleyValueVariation = averageShapleyValueVariation;
 	}
 
 	public Coalition(List<Claimer> claimers) 

@@ -82,16 +82,16 @@ public class UserInterfaceFrame extends JFrame
 		// inputs
 		
 		estateLabel = new JLabel("Estate/Endowment: ");
-		agentALabel = new JLabel("Agent A: ");
-		agentBLabel = new JLabel("Agent B: ");
-		agentCLabel = new JLabel("Agent C: ");
-		agentDLabel = new JLabel("Agent D: ");
+		agentALabel = new JLabel("Minimum Claim: ");
+		agentBLabel = new JLabel("Maximum Claim: ");
+		agentCLabel = new JLabel("Number of Agents: ");
+		// agentDLabel = new JLabel("Agent D: ");
 		
 		estate = new JTextField(4);
 		agentA = new JTextField(4);
 		agentB = new JTextField(4);
 		agentC = new JTextField(4);
-		agentD = new JTextField(4);
+		// agentD = new JTextField(4);
 		
 		inputsPanel = new JPanel();
 		
@@ -103,8 +103,8 @@ public class UserInterfaceFrame extends JFrame
 		inputsPanel.add(agentB);
 		inputsPanel.add(agentCLabel);
 		inputsPanel.add(agentC);
-		inputsPanel.add(agentDLabel);
-		inputsPanel.add(agentD);
+		// inputsPanel.add(agentDLabel);
+		// inputsPanel.add(agentD);
 		
 		canvasPanel.add(inputsPanel, BorderLayout.NORTH);
 		canvasPanel.add(buttonsPanel, BorderLayout.CENTER);
@@ -119,7 +119,7 @@ public class UserInterfaceFrame extends JFrame
 		
 		// console panel:
 		//
-		/*
+		
 		consolePanel = new JPanel();
 		consolePanel.setBackground(Color.WHITE);
 						
@@ -141,7 +141,7 @@ public class UserInterfaceFrame extends JFrame
 		
 		canvasPanel.add(consolePanel, BorderLayout.SOUTH);
 		
-		*/
+		
 		this.add(canvasPanel);
 		
 		this.setPreferredSize(new Dimension(700, 675)); // 525, 750
@@ -162,7 +162,7 @@ public class UserInterfaceFrame extends JFrame
 		    	{
 		    		try
 		    		{
-		    			
+		    			/*
 		    			int iterations = 1;
 		    			double estateInput = Double.parseDouble(estate.getText());
 		    			List<Claimer> claimers = new ArrayList<Claimer>();
@@ -210,8 +210,9 @@ public class UserInterfaceFrame extends JFrame
 		    				System.out.println(shap[j]);
 		    			}
 		    			System.out.println("Ended...");
-		    			
-		    			// calculateAverageVariances();
+		    			*/
+		    			disableAllButtons();
+		    			calculateAverageVariances();
 		    							    			
 					}
 		    		catch(Exception exception)  // TODO?
@@ -288,7 +289,8 @@ public class UserInterfaceFrame extends JFrame
 		calculateReference(estateInput, coalitions, claimers);
 		calculateProportionalVariance(coalitions, iterations);
 		calculateCEAVariance(coalitions, iterations);
-		calculateCELVariance(coalitions, iterations);	
+		calculateCELVariance(coalitions, iterations);
+		calculateShapleyVariance(claimers, coalitions, iterations);
 		
 		// print(claimers, coalitions);
 		// printAverages(coalitions);
@@ -319,19 +321,22 @@ public class UserInterfaceFrame extends JFrame
 				calculateProportionalVariance(coalitions, iterations);
 				calculateCEAVariance(coalitions, iterations);
 				calculateCELVariance(coalitions, iterations);
+				calculateShapleyVariance(claimers, coalitions, iterations);
 				
 				// System.out.println(stop);
 				// print(claimers, coalitions);
-				
+				/*
 				if(iterations % 10 == 0)
 				{
 					printAverages(coalitions, iterations);					
 				}
-				
+				*/
 				// stop--;
 			}
-		}	
-
+		}
+		printAverages(coalitions, iterations);
+		enableAllButtons();
+		stop = false;
 		// print(claimers, coalitions);
 	}
 	
@@ -352,12 +357,12 @@ public class UserInterfaceFrame extends JFrame
 		System.out.println("iteration: " + iter);
 		for(Coalition entry : list2)
 		{
-			System.out.println(entry.getId() + " ref: " + entry.getReference() + " prop avg.: " + entry.getAveragePropVariation() + " CEA avg.: " + entry.getAverageCEAVariation() + " CEL avg.: " + entry.getAverageCELVariation());
+			System.out.println(entry.getId() + " ref: " + entry.getReference() + " prop avg.: " + entry.getAveragePropVariation() + " CEA avg.: " + entry.getAverageCEAVariation() + " CEL avg.: " + entry.getAverageCELVariation()+ " Shap avg.: " + entry.getAverageShapleyValueVariation());
 		}
 	}
 	
 	
-	public static <T> List<List<T>> combination(List<T> values, int size)
+	private static <T> List<List<T>> combination(List<T> values, int size)
 	{
 		if(size == 0)
 		{
@@ -415,7 +420,7 @@ public class UserInterfaceFrame extends JFrame
 	}
 	
 	// calculates the Shapley values of the claimers and puts them in a double array
-	public static double[] calculateShapleyValues(List<Claimer> claimers, List<Coalition> coalitions)
+	private static double[] calculateShapleyValues(List<Claimer> claimers, List<Coalition> coalitions)
 	{
 		List<Claimer> claimersClone = new ArrayList<Claimer>(claimers);
 		List<List<Claimer>> permutations = generatePerm(claimersClone);
@@ -458,6 +463,7 @@ public class UserInterfaceFrame extends JFrame
 		
 		for(int j = 0; j < shapleys.length; j++)
 		{
+			claimers.get(j).setShapleyValue(shapleys[j]/permutations.size());
 			shapleys[j] = shapleys[j]/permutations.size();
 		}
 		
@@ -466,7 +472,7 @@ public class UserInterfaceFrame extends JFrame
 	}
 	
 	// returns the amount obligated to a given agent based on parameters
-	public static void proportionalRuleClaimers(double estate, List<Claimer> input)
+	private static void proportionalRuleClaimers(double estate, List<Claimer> input)
 	{
 		double sumOfClaims = sum(input, "claims");
 		
@@ -477,7 +483,7 @@ public class UserInterfaceFrame extends JFrame
 	}
 	
 	// updates the CEAAllocation value for each agent
-	public static void CEARuleClaimers(double estate, List<Claimer> input)
+	private static void CEARuleClaimers(double estate, List<Claimer> input)
 	{
 		double equalAmount = estate/input.size();
 		double remainingAmount = estate;
@@ -504,7 +510,7 @@ public class UserInterfaceFrame extends JFrame
 	}
 	
 	// updates the CELAllocation value for each agent
-	public static void CELRuleClaimers(double estate, List<Claimer> allClaimers)
+	private static void CELRuleClaimers(double estate, List<Claimer> allClaimers)
 	{
 		double sumOfClaims = sum(allClaimers, "claims");
 		
@@ -517,7 +523,7 @@ public class UserInterfaceFrame extends JFrame
 	}
 	
 	// v(s) function: used as reference point for SRD
-	public static void calculateReference(double estate, List<Coalition> coalitions, List<Claimer> allClaimers)
+	private static void calculateReference(double estate, List<Coalition> coalitions, List<Claimer> allClaimers)
 	{
 		double sumOfAllClaims = sum(allClaimers, "claims");
 		
@@ -532,7 +538,7 @@ public class UserInterfaceFrame extends JFrame
 	
 	// calculateReference must be called before this method to ensure we have the correct reference values
 	// calculates the profit (or surplus) each coalition earns with this rule
-	public static void calculateProportionalVariance(List<Coalition> coalitions, int iteration)
+	private static void calculateProportionalVariance(List<Coalition> coalitions, int iteration)
 	{
 		for(Coalition entry : coalitions)
 		{
@@ -547,7 +553,7 @@ public class UserInterfaceFrame extends JFrame
 	}
 	
 	// calculates the profit (or surplus) each coalition earns with this rule
-	public static void calculateCEAVariance(List<Coalition> coalitions, int iteration)
+	private static void calculateCEAVariance(List<Coalition> coalitions, int iteration)
 	{
 		for(Coalition entry : coalitions)
 		{
@@ -567,7 +573,7 @@ public class UserInterfaceFrame extends JFrame
 		}
 	}
 	
-	public static void calculateCELVariance(List<Coalition> coalitions, int iteration)
+	private static void calculateCELVariance(List<Coalition> coalitions, int iteration)
 	{
 		for(Coalition entry : coalitions)
 		{
@@ -583,6 +589,29 @@ public class UserInterfaceFrame extends JFrame
 			{
 				entry.setConstrainedELAllocation(CELProfit);
 				entry.setAverageCELVariation(entry.getAverageCELVariation()+((CELProfit-entry.getAverageCELVariation())/iteration));
+			}	
+		}
+	}
+	
+	private static void calculateShapleyVariance(List<Claimer> claimers, List<Coalition> coalitions, int iteration)
+	{
+		calculateShapleyValues(claimers, coalitions); // first calculate the shapley values for each claimer
+		
+		// update the shapley value variance for each coalition
+		for(Coalition entry : coalitions)
+		{
+			double sumShapleyClaimers = sum(entry.getClaimers(), "shap");
+			
+			double ShapleyProfit = sumShapleyClaimers - entry.getReference();
+			if(ShapleyProfit < 0)
+			{
+				entry.setShapleyValueAllocation(0);
+				entry.setAverageShapleyValueVariation(entry.getAverageShapleyValueVariation()+((0-entry.getAverageShapleyValueVariation())/iteration));
+			}
+			else
+			{
+				entry.setShapleyValueAllocation(ShapleyProfit);
+				entry.setAverageShapleyValueVariation(entry.getAverageShapleyValueVariation()+((ShapleyProfit-entry.getAverageShapleyValueVariation())/iteration));
 			}	
 		}
 	}
@@ -629,7 +658,12 @@ public class UserInterfaceFrame extends JFrame
 				{
 					sumOfElements += element.getConstrainedELAllocation();
 				}
-				break;		
+				break;	
+			case "shap":
+					for(Claimer element : list)
+					{
+						sumOfElements += element.getShapleyValue();
+					}
 		}
 			
 		return sumOfElements;
@@ -645,6 +679,24 @@ public class UserInterfaceFrame extends JFrame
 				claimer.setClaim(claimers.get(claimers.indexOf(claimer)).getClaim());
 			}
 		}
+	}
+	
+	private void disableAllButtons()
+	{
+		estate.setEditable(false);
+		agentA.setEditable(false);
+		agentB.setEditable(false);
+		agentC.setEditable(false);
+		runButton.setEnabled(false);		
+	}
+	
+	private void enableAllButtons()
+	{
+		estate.setEditable(true);
+		agentA.setEditable(true);
+		agentB.setEditable(true);
+		agentC.setEditable(true);
+		runButton.setEnabled(true);		
 	}
 }
  
