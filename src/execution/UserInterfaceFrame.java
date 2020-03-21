@@ -82,16 +82,24 @@ public class UserInterfaceFrame extends JFrame
 		// inputs
 		
 		estateLabel = new JLabel("Estate/Endowment: ");
+		agentALabel = new JLabel("Agent A: ");
+		agentBLabel = new JLabel("Agent B: ");
+		agentCLabel = new JLabel("Agent C: ");
+		agentDLabel = new JLabel("Agent D: ");
+		
+		/*
+		estateLabel = new JLabel("Estate/Endowment: ");
 		agentALabel = new JLabel("Minimum Claim: ");
 		agentBLabel = new JLabel("Maximum Claim: ");
 		agentCLabel = new JLabel("Number of Agents: ");
 		// agentDLabel = new JLabel("Agent D: ");
+		*/
 		
 		estate = new JTextField(4);
 		agentA = new JTextField(4);
 		agentB = new JTextField(4);
 		agentC = new JTextField(4);
-		// agentD = new JTextField(4);
+		agentD = new JTextField(4);
 		
 		inputsPanel = new JPanel();
 		
@@ -103,8 +111,8 @@ public class UserInterfaceFrame extends JFrame
 		inputsPanel.add(agentB);
 		inputsPanel.add(agentCLabel);
 		inputsPanel.add(agentC);
-		// inputsPanel.add(agentDLabel);
-		// inputsPanel.add(agentD);
+		inputsPanel.add(agentDLabel);
+		inputsPanel.add(agentD);
 		
 		canvasPanel.add(inputsPanel, BorderLayout.NORTH);
 		canvasPanel.add(buttonsPanel, BorderLayout.CENTER);
@@ -123,7 +131,7 @@ public class UserInterfaceFrame extends JFrame
 		consolePanel = new JPanel();
 		consolePanel.setBackground(Color.WHITE);
 						
-		consoleOutput = new JTextArea(33, 65);
+		consoleOutput = new JTextArea(33, 60);
 		consoleOutput.setEditable(false);
 		JScrollPane scrollPane = new JScrollPane(consoleOutput);		
 						
@@ -162,57 +170,11 @@ public class UserInterfaceFrame extends JFrame
 		    	{
 		    		try
 		    		{
-		    			/*
-		    			int iterations = 1;
-		    			double estateInput = Double.parseDouble(estate.getText());
-		    			List<Claimer> claimers = new ArrayList<Claimer>();
+		    			calculateExactVariance();
 		    			
-		    			claimers.add(new Claimer('a', Double.parseDouble(agentA.getText())));
-		    			claimers.add(new Claimer('b', Double.parseDouble(agentB.getText())));
-		    			claimers.add(new Claimer('c', Double.parseDouble(agentC.getText())));
-		    			claimers.add(new Claimer('d', Double.parseDouble(agentD.getText())));
-		    			
-		    			
-		    			List<LinkedList<Claimer>> powerSet = new LinkedList<LinkedList<Claimer>>();
-		    			
-		    			for(int i = 1; i <= claimers.size(); i++)
-		    			{
-		    				powerSet.addAll((Collection<? extends LinkedList<Claimer>>) combination(claimers, i));
-		    			}
-		    			
-		    			List<Coalition> coalitions = new ArrayList<Coalition>(); // master list of coalitions
-		    			
-		    			for(LinkedList<Claimer> entry : powerSet)
-		    			{
-		    				coalitions.add(new Coalition(entry));
-		    			}
-		    			
-		    			proportionalRuleClaimers(estateInput, claimers);
-		    			CEARuleClaimers(estateInput, claimers);
-		    			CELRuleClaimers(estateInput, claimers);
-		    			
-		    			calculateReference(estateInput, coalitions, claimers);
-		    			calculateProportionalVariance(coalitions, iterations);
-		    			calculateCEAVariance(coalitions, iterations);
-		    			calculateCELVariance(coalitions, iterations);
-		    			double[] shap = calculateShapleyValues(claimers, coalitions);
-		    			
-		    			
-		    			for(Coalition entry : coalitions)
-		    			{
-		    				System.out.println(entry.getId() + " ref: " + entry.getReference() + " prop: " + entry.getProportionalAllocation() + " CEA: " + entry.getConstrainedEAAllocation()+ " CEL: " + entry.getConstrainedELAllocation());
-		    			}		    			
-		    			
-		    			System.out.println("Started...");
-		    			System.out.println(shap.length);
-		    			for(int j = 0; j < shap.length; j++)
-		    			{
-		    				System.out.println(shap[j]);
-		    			}
-		    			System.out.println("Ended...");
-		    			*/
-		    			disableAllButtons();
-		    			calculateAverageVariances();
+		    			// disableAllButtons();
+		    			// System.out.println("Averages will be displayed after stop is clicked...");
+		    			// calculateAverageVariances();
 		    							    			
 					}
 		    		catch(Exception exception)  // TODO?
@@ -338,6 +300,51 @@ public class UserInterfaceFrame extends JFrame
 		enableAllButtons();
 		stop = false;
 		// print(claimers, coalitions);
+	}
+	
+	private void calculateExactVariance()
+	{
+		int iterations = 1;
+		double estateInput = Double.parseDouble(estate.getText());
+		List<Claimer> claimers = new ArrayList<Claimer>();
+		
+		claimers.add(new Claimer('a', Double.parseDouble(agentA.getText())));
+		claimers.add(new Claimer('b', Double.parseDouble(agentB.getText())));
+		claimers.add(new Claimer('c', Double.parseDouble(agentC.getText())));
+		claimers.add(new Claimer('d', Double.parseDouble(agentD.getText())));
+		
+		
+		List<LinkedList<Claimer>> powerSet = new LinkedList<LinkedList<Claimer>>();
+		
+		for(int i = 1; i <= claimers.size(); i++)
+		{
+			powerSet.addAll((Collection<? extends LinkedList<Claimer>>) combination(claimers, i));
+		}
+		
+		List<Coalition> coalitions = new ArrayList<Coalition>(); // master list of coalitions
+		
+		for(LinkedList<Claimer> entry : powerSet)
+		{
+			coalitions.add(new Coalition(entry));
+		}
+		
+		proportionalRuleClaimers(estateInput, claimers);
+		CEARuleClaimers(estateInput, claimers);
+		CELRuleClaimers(estateInput, claimers);
+		
+		calculateReference(estateInput, coalitions, claimers);
+		calculateProportionalVariance(coalitions, iterations);
+		calculateCEAVariance(coalitions, iterations);
+		calculateCELVariance(coalitions, iterations);
+		calculateShapleyVariance(claimers, coalitions, iterations);
+		
+		
+		for(Coalition entry : coalitions)
+		{
+			System.out.println("coalition: " + entry.getId() + ", ref: " + entry.getReference() + ", prop. profit: " + 
+					entry.getProportionalAllocation() + ", CEA profit: " + entry.getConstrainedEAAllocation() 
+					+ ", CEL profit: " + entry.getConstrainedELAllocation() + ", Shapley profit: " + entry.getShapleyValueAllocation());
+		}
 	}
 	
 	private static void print(List<Claimer> list1, List<Coalition> list2)
