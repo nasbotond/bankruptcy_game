@@ -339,6 +339,11 @@ public class UserInterfaceFrame extends JFrame
 		calculateShapleyVariance(claimers, coalitions, iterations);
 		
 		
+		for(Claimer entry : claimers)
+		{
+			System.out.println(entry.getId() + " prop: " + entry.getProportionalAllocation() + " CEA: " + entry.getConstrainedEAAllocation() + " CEL: " + entry.getConstrainedELAllocation());
+		}
+		
 		for(Coalition entry : coalitions)
 		{
 			System.out.println("coalition: " + entry.getId() + ", ref: " + entry.getReference() + ", prop. profit: " + 
@@ -520,12 +525,26 @@ public class UserInterfaceFrame extends JFrame
 	private static void CELRuleClaimers(double estate, List<Claimer> allClaimers)
 	{
 		double sumOfClaims = sum(allClaimers, "claims");
-		
+		double remainingLoss = sumOfClaims - estate;
 		double equalLoss = (sumOfClaims - estate)/allClaimers.size();
+		int iterator = allClaimers.size();
 		
 		for(Claimer claimer : allClaimers)
 		{
-			claimer.setConstrainedELAllocation(claimer.getClaim() - equalLoss);
+			iterator--;
+			
+			if(claimer.getClaim() < equalLoss)
+			{
+				claimer.setConstrainedELAllocation(0.0);
+				remainingLoss -= claimer.getClaim();
+			}
+			else
+			{
+				claimer.setConstrainedELAllocation(claimer.getClaim() - equalLoss);
+				remainingLoss -= equalLoss;
+			}
+			
+			equalLoss = remainingLoss/iterator;
 		}
 	}
 	
