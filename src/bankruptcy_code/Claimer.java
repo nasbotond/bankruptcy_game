@@ -5,9 +5,9 @@ public class Claimer
 	private double claim;
 	private char id;
 	private double proportionalAllocation; // proportional rule
-	private double constrainedEAAllocation; // constrained equal awards rule
-	private double constrainedELAllocation; // constrained equal losses rule
-	private double shapleyValue;
+	private double CEAAllocation; // constrained equal awards rule
+	private double CELAllocation; // constrained equal losses rule
+	private double shapleyValue; // shapley values of the claimer
 	
 	public double getClaim() 
 	{
@@ -34,24 +34,24 @@ public class Claimer
 		this.proportionalAllocation = proportionalAllocation;
 	}
 
-	public double getConstrainedEAAllocation() 
+	public double getCEAAllocation() 
 	{
-		return constrainedEAAllocation;
+		return CEAAllocation;
 	}
 
-	public void setConstrainedEAAllocation(double constrainedEAAllocation) 
+	public void setCEAAllocation(double CEAAllocation) 
 	{
-		this.constrainedEAAllocation = constrainedEAAllocation;
+		this.CEAAllocation = CEAAllocation;
 	}
 
-	public double getConstrainedELAllocation() 
+	public double getCELAllocation() 
 	{
-		return constrainedELAllocation;
+		return CELAllocation;
 	}
 
-	public void setConstrainedELAllocation(double constrainedELAllocation) 
+	public void setCELAllocation(double CELAllocation) 
 	{
-		this.constrainedELAllocation = constrainedELAllocation;
+		this.CELAllocation = CELAllocation;
 	}
 
 	public double getShapleyValue() 

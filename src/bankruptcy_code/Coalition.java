@@ -8,8 +8,8 @@ public class Coalition
 	private String id;
 	private double reference; // characteristic function
 	private double proportionalAllocation; // proportional rule
-	private double constrainedEAAllocation; // constrained equal awards rule
-	private double constrainedELAllocation; // constrained equal losses rule
+	private double CEAAllocation; // constrained equal awards rule
+	private double CELAllocation; // constrained equal losses rule
 	private double shapleyValueAllocation;
 	
 	private double averagePropVariation;
@@ -32,7 +32,8 @@ public class Coalition
 		return reference;
 	}
 
-	public void setReference(double reference) {
+	public void setReference(double reference) 
+	{
 		this.reference = reference;
 	}
 
@@ -46,24 +47,24 @@ public class Coalition
 		this.proportionalAllocation = proportionalAllocation;
 	}
 
-	public double getConstrainedEAAllocation() 
+	public double getCEAAllocation() 
 	{
-		return constrainedEAAllocation;
+		return CEAAllocation;
 	}
 
-	public void setConstrainedEAAllocation(double constrainedEAAllocation) 
+	public void setCEAAllocation(double CEAAllocation) 
 	{
-		this.constrainedEAAllocation = constrainedEAAllocation;
+		this.CEAAllocation = CEAAllocation;
 	}
 
-	public double getConstrainedELAllocation() 
+	public double getCELAllocation() 
 	{
-		return constrainedELAllocation;
+		return CELAllocation;
 	}
 
-	public void setConstrainedELAllocation(double constrainedELAllocation) 
+	public void setCELAllocation(double CELAllocation) 
 	{
-		this.constrainedELAllocation = constrainedELAllocation;
+		this.CELAllocation = CELAllocation;
 	}
 
 	public double getShapleyValueAllocation() 
