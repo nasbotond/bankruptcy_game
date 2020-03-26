@@ -8,6 +8,7 @@ public class Claimer
 	private double CEAAllocation; // constrained equal awards rule
 	private double CELAllocation; // constrained equal losses rule
 	private double shapleyValue; // shapley values of the claimer
+	private double talmudAllocation; // talmud rule allocation 
 	
 	public double getClaim() 
 	{
@@ -62,6 +63,16 @@ public class Claimer
 	public void setShapleyValue(double shapleyValue) 
 	{
 		this.shapleyValue = shapleyValue;
+	}
+
+	public double getTalmudAllocation() 
+	{
+		return talmudAllocation;
+	}
+
+	public void setTalmudAllocation(double talmudAllocation) 
+	{
+		this.talmudAllocation = talmudAllocation;
 	}
 
 	public Claimer(char id, double claim)

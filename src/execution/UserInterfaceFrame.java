@@ -334,7 +334,8 @@ public class UserInterfaceFrame extends JFrame
 		
 		RuleCalculator.proportionalRuleAllocation(estateInput, claimers);
 		RuleCalculator.CEARuleAllocation(estateInput, claimers);
-		RuleCalculator.CELRuleAllocation(estateInput, claimers);		
+		RuleCalculator.CELRuleAllocation(estateInput, claimers);
+		RuleCalculator.TalmudRuleAllocation(estateInput, claimers);
 		RuleCalculator.calculateReference(estateInput, coalitions, claimers);
 		
 		RuleCalculator.calculateShapleyValues(claimers, coalitions); // needs to be after calculateReference() because it needs the reference values for calculation
@@ -350,17 +351,20 @@ public class UserInterfaceFrame extends JFrame
 		RuleCalculator.calculateCoalitionCEAAllocation(coalitions);
 		RuleCalculator.calculateCoalitionCELAllocation(coalitions);
 		RuleCalculator.calculateCoalitionShapleyAllocation(coalitions);
+		RuleCalculator.calculateCoalitionTalmudAllocation(coalitions);
 		
 		List<CoalitionWithRankingDifference> ref = RankCalculator.rankingBasedOnReference(coalitions);
 		List<CoalitionWithRankingDifference> prop = RankCalculator.rankingBasedOnProportionalAllocation(coalitions);
 		List<CoalitionWithRankingDifference> cea = RankCalculator.rankingBasedOnCEAAllocation(coalitions);
 		List<CoalitionWithRankingDifference> cel = RankCalculator.rankingBasedOnCELAllocation(coalitions);
 		List<CoalitionWithRankingDifference> shap = RankCalculator.rankingBasedOnShapleyAllocation(coalitions);
+		List<CoalitionWithRankingDifference> tal = RankCalculator.rankingBasedOnTalmudAllocation(coalitions);
 		
 		RankCalculator.compareRanks(prop, ref);
 		RankCalculator.compareRanks(cea, ref);
 		RankCalculator.compareRanks(cel, ref);
 		RankCalculator.compareRanks(shap, ref);
+		RankCalculator.compareRanks(tal, ref);
 		
 		/*
 		for(Claimer entry : claimers)
@@ -376,6 +380,10 @@ public class UserInterfaceFrame extends JFrame
 					+ ", CEL profit: " + entry.getCELAllocation() + ", Shapley profit: " + entry.getShapleyValueAllocation());
 		}
 		*/
+		for(Claimer cl : claimers)
+		{
+			System.out.println("TALMUD  " + cl.getId() + " " + cl.getTalmudAllocation());
+		}
 		
 		for(CoalitionWithRankingDifference entry : ref)
 		{
@@ -400,7 +408,12 @@ public class UserInterfaceFrame extends JFrame
 		for(CoalitionWithRankingDifference entry : shap)
 		{
 			System.out.println("SHAP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
-		}		
+		}	
+		
+		for(CoalitionWithRankingDifference entry : tal)
+		{
+			System.out.println("TAL   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
+		}
 	}
 	
 	private static void print(List<Claimer> list1, List<Coalition> list2)

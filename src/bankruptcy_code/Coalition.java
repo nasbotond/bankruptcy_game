@@ -11,6 +11,7 @@ public class Coalition
 	private double CEAAllocation; // constrained equal awards rule
 	private double CELAllocation; // constrained equal losses rule
 	private double shapleyValueAllocation;
+	private double talmudAllocation;
 	
 	private double averagePropVariation;
 	private double averageCEAVariation;
@@ -75,6 +76,16 @@ public class Coalition
 	public void setShapleyValueAllocation(double shapleyValueAllocation) 
 	{
 		this.shapleyValueAllocation = shapleyValueAllocation;
+	}
+
+	public double getTalmudAllocation() 
+	{
+		return talmudAllocation;
+	}
+
+	public void setTalmudAllocation(double talmudAllocation) 
+	{
+		this.talmudAllocation = talmudAllocation;
 	}
 
 	public double getAveragePropVariation() 

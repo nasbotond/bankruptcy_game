@@ -129,6 +129,37 @@ public class RuleCalculator
 		}
 	}
 	
+	// calculate talmud allocation
+	public static void TalmudRuleAllocation(double estate, List<Claimer> allClaimers)
+	{
+		double halvesSum = 0.0;
+		List<Claimer> halvedClaimClaimers = new ArrayList<Claimer>(); // deep copy of allClaimers with adjusted claims (halved)
+		for(Claimer claimer : allClaimers)
+		{
+			halvesSum += claimer.getClaim() * 0.5;
+			halvedClaimClaimers.add(new Claimer(claimer.getId(), claimer.getClaim()*0.5));
+		}
+
+		if(estate <= halvesSum)
+		{
+			CEARuleAllocation(estate, halvedClaimClaimers);
+			for(Claimer claimer : allClaimers)
+			{
+				// assumes that the lists are in the same order (should be in this context)
+				claimer.setTalmudAllocation(halvedClaimClaimers.get(allClaimers.lastIndexOf(claimer)).getCEAAllocation());
+			}
+		}
+		else if(estate >= halvesSum)
+		{
+			CEARuleAllocation(sum(allClaimers, "claims") - estate, halvedClaimClaimers);
+			for(Claimer claimer : allClaimers)
+			{
+				// assumes that the lists are in the same order (should be in this context)
+				claimer.setTalmudAllocation(claimer.getClaim() - halvedClaimClaimers.get(allClaimers.lastIndexOf(claimer)).getCEAAllocation());
+			}
+		}
+	}
+	
 	// v(s) function: used as reference point for SRD
 	public static void calculateReference(double estate, List<Coalition> coalitions, List<Claimer> allClaimers)
 	{
@@ -180,6 +211,16 @@ public class RuleCalculator
 			double sumClaimers = sum(entry.getClaimers(), "shap");
 			
 			entry.setShapleyValueAllocation(sumClaimers);
+		}
+	}
+	
+	public static void calculateCoalitionTalmudAllocation(List<Coalition> coalitions)
+	{
+		for(Coalition entry : coalitions)
+		{
+			double sumClaimers = sum(entry.getClaimers(), "talmud");
+			
+			entry.setTalmudAllocation(sumClaimers);
 		}
 	}
 	
@@ -290,6 +331,11 @@ public class RuleCalculator
 				for(Claimer element : list)
 				{
 					sumOfElements += element.getShapleyValue();
+				}
+			case "talmud":
+				for(Claimer element : list)
+				{
+					sumOfElements += element.getTalmudAllocation();
 				}
 		}
 				
