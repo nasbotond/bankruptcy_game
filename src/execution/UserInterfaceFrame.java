@@ -383,6 +383,8 @@ public class UserInterfaceFrame extends JFrame
 		for(Claimer cl : claimers)
 		{
 			System.out.println("TALMUD  " + cl.getId() + " " + cl.getTalmudAllocation());
+			System.out.println("CEA  " + cl.getId() + " " + cl.getCEAAllocation());
+			System.out.println("CEL  " + cl.getId() + " " + cl.getCELAllocation());
 		}
 		
 		for(CoalitionWithRankingDifference entry : ref)

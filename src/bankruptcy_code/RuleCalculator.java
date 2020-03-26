@@ -3,7 +3,10 @@ package bankruptcy_code;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class RuleCalculator
 {
@@ -75,6 +78,7 @@ public class RuleCalculator
 		}
 	}
 	
+	/*
 	// updates the CEAAllocation value for each agent
 	public static void CEARuleAllocation(double estate, List<Claimer> input)
 	{
@@ -84,24 +88,72 @@ public class RuleCalculator
 		
 		for(Claimer claimer : input)
 		{
-			remainingAmount -= equalAmount;
+			// remainingAmount -= equalAmount;
 			iterator--;
 			
 			if(claimer.getClaim() < equalAmount)
 			{
 				claimer.setCEAAllocation(claimer.getClaim());
-				remainingAmount += (equalAmount-claimer.getClaim());
+				// remainingAmount += (equalAmount-claimer.getClaim());
+				remainingAmount -= claimer.getClaim();
 			}
 			
 			if (claimer.getClaim() >= equalAmount)
 			{
 				claimer.setCEAAllocation(equalAmount);
+				remainingAmount -= equalAmount;
 			}
 			
 			equalAmount = remainingAmount/iterator;
 		}
 	}
+	*/
 	
+	public static void CEARuleAllocation(double estate, List<Claimer> input)
+	{
+		List<Claimer> doneClaimers = new ArrayList<Claimer>(); // deep copy of input
+		for(Claimer claimer : input)
+		{
+			doneClaimers.add(new Claimer(claimer.getId(), claimer.getClaim()));
+		}
+		
+		double surplus = estate;
+		double equal = surplus/doneClaimers.size();
+		while(surplus > 0)
+		{
+			for(Iterator<Claimer> iterator = doneClaimers.iterator(); iterator.hasNext();)
+			{
+				Claimer claimer = iterator.next();
+				if(claimer.getCEAAllocation() + equal >= claimer.getClaim()) // needed to dynamically remove from the list
+				{
+					surplus -= claimer.getClaim();
+					// entry.setValue(false);
+					for(Claimer inputClaimer : input)
+					{
+						if(inputClaimer.getId() == claimer.getId())
+						{
+							inputClaimer.setCEAAllocation(claimer.getClaim());
+						}
+					}
+					iterator.remove();
+				}
+				else
+				{
+					claimer.setCEAAllocation(claimer.getCEAAllocation() + equal);
+					for(Claimer inputClaimer : input)
+					{
+						if(inputClaimer.getId() == claimer.getId())
+						{
+							inputClaimer.setCEAAllocation(claimer.getCEAAllocation());
+						}
+					}
+					surplus -= equal;
+				}				
+			}
+			equal = surplus/doneClaimers.size();
+		}
+
+	}
 	// updates the CELAllocation value for each agent
 	public static void CELRuleAllocation(double estate, List<Claimer> allClaimers)
 	{
