@@ -152,8 +152,9 @@ public class RuleCalculator
 			}
 			equal = surplus/doneClaimers.size();
 		}
-
 	}
+	
+	/*
 	// updates the CELAllocation value for each agent
 	public static void CELRuleAllocation(double estate, List<Claimer> allClaimers)
 	{
@@ -178,6 +179,59 @@ public class RuleCalculator
 			}
 			
 			equalLoss = remainingLoss/iterator;
+		}
+	}
+	*/
+	
+	
+	public static void CELRuleAllocation(double estate, List<Claimer> input)
+	{
+		List<Claimer> doneClaimers = new ArrayList<Claimer>(); // deep copy of input
+		for(Claimer claimer : input)
+		{
+			doneClaimers.add(new Claimer(claimer.getId(), claimer.getClaim()));
+		}
+		
+		for(Claimer claimer : doneClaimers)
+		{
+			claimer.setCELAllocation(claimer.getClaim());
+		}
+		
+		double sumOfClaims = sum(doneClaimers, "claims");
+		double deficit = sumOfClaims - estate;
+		double equal = deficit/doneClaimers.size();
+		while(deficit > 0)
+		{
+			for(Iterator<Claimer> iterator = doneClaimers.iterator(); iterator.hasNext();)
+			{
+				Claimer claimer = iterator.next();
+				if(claimer.getCELAllocation() <= equal) // needed to dynamically remove from the list
+				{
+					deficit -= claimer.getCELAllocation();
+					// entry.setValue(false);
+					for(Claimer inputClaimer : input)
+					{
+						if(inputClaimer.getId() == claimer.getId())
+						{
+							inputClaimer.setCELAllocation(0);
+						}
+					}
+					iterator.remove();
+				}
+				else
+				{
+					claimer.setCELAllocation(claimer.getCELAllocation() - equal);
+					for(Claimer inputClaimer : input)
+					{
+						if(inputClaimer.getId() == claimer.getId())
+						{
+							inputClaimer.setCELAllocation(claimer.getCELAllocation());
+						}
+					}
+					deficit -= equal;
+				}				
+			}
+			equal = deficit/doneClaimers.size();
 		}
 	}
 	
