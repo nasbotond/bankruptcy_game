@@ -339,7 +339,7 @@ public class UserInterfaceFrame extends JFrame
 		RuleCalculator.calculateReference(estateInput, coalitions, claimers);
 		
 		RuleCalculator.calculateShapleyValues(claimers, coalitions); // needs to be after calculateReference() because it needs the reference values for calculation
-
+		RuleCalculator.minimalOverlappingRuleAllocation(estateInput, claimers);
 		/*
 		RuleCalculator.calculateProportionalVariance(coalitions, iterations);
 		RuleCalculator.calculateCEAVariance(coalitions, iterations);
@@ -352,6 +352,7 @@ public class UserInterfaceFrame extends JFrame
 		RuleCalculator.calculateCoalitionCELAllocation(coalitions);
 		RuleCalculator.calculateCoalitionShapleyAllocation(coalitions);
 		RuleCalculator.calculateCoalitionTalmudAllocation(coalitions);
+		RuleCalculator.calculateCoalitionMinimalOverlappingAllocation(coalitions);
 		
 		List<CoalitionWithRankingDifference> ref = RankCalculator.rankingBasedOnReference(coalitions);
 		List<CoalitionWithRankingDifference> prop = RankCalculator.rankingBasedOnProportionalAllocation(coalitions);
@@ -359,12 +360,14 @@ public class UserInterfaceFrame extends JFrame
 		List<CoalitionWithRankingDifference> cel = RankCalculator.rankingBasedOnCELAllocation(coalitions);
 		List<CoalitionWithRankingDifference> shap = RankCalculator.rankingBasedOnShapleyAllocation(coalitions);
 		List<CoalitionWithRankingDifference> tal = RankCalculator.rankingBasedOnTalmudAllocation(coalitions);
+		List<CoalitionWithRankingDifference> mo = RankCalculator.rankingBasedOnMinimalOverlappingAllocation(coalitions);
 		
 		RankCalculator.compareRanks(prop, ref);
 		RankCalculator.compareRanks(cea, ref);
 		RankCalculator.compareRanks(cel, ref);
 		RankCalculator.compareRanks(shap, ref);
 		RankCalculator.compareRanks(tal, ref);
+		RankCalculator.compareRanks(mo, ref);
 		
 		/*
 		for(Claimer entry : claimers)
@@ -382,9 +385,12 @@ public class UserInterfaceFrame extends JFrame
 		*/
 		for(Claimer cl : claimers)
 		{
+			System.out.println("MO  " + cl.getId() + " " + cl.getMinimalOverlappingAllocation());
+			/*
 			System.out.println("TALMUD  " + cl.getId() + " " + cl.getTalmudAllocation());
 			System.out.println("CEA  " + cl.getId() + " " + cl.getCEAAllocation());
 			System.out.println("CEL  " + cl.getId() + " " + cl.getCELAllocation());
+			*/
 		}
 		
 		for(CoalitionWithRankingDifference entry : ref)
@@ -415,6 +421,11 @@ public class UserInterfaceFrame extends JFrame
 		for(CoalitionWithRankingDifference entry : tal)
 		{
 			System.out.println("TAL   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
+		}
+		
+		for(CoalitionWithRankingDifference entry : mo)
+		{
+			System.out.println("MO   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 		}
 	}
 	

@@ -3,10 +3,8 @@ package bankruptcy_code;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 public class RuleCalculator
 {
@@ -266,6 +264,97 @@ public class RuleCalculator
 		}
 	}
 	
+	private static void ibnEzra(List<Claimer> input)
+	{
+		List<Claimer> cloneClaimers = new ArrayList<Claimer>(); // deep copy of input
+		for(Claimer claimer : input)
+		{
+			cloneClaimers.add(new Claimer(claimer.getId(), claimer.getClaim()));
+		}
+		
+		// sort lowest claim to highest claim
+		Collections.sort(cloneClaimers, new Comparator<Claimer>(){
+		     public int compare(Claimer o1, Claimer o2){
+		         if(o1.getClaim() == o2.getClaim())
+		             return 0;
+		         return o1.getClaim() < o2.getClaim() ? -1 : 1;
+		     }
+		});
+		
+		int n = input.size();
+		
+		for(Claimer claimer : cloneClaimers)
+		{
+			for(int i = cloneClaimers.indexOf(claimer) + 1; i > 0; i--)
+			{
+				if(i == 1)
+				{
+					claimer.setMinimalOverlappingAllocation(claimer.getMinimalOverlappingAllocation() + 
+							(cloneClaimers.get(i - 1).getClaim()/n));
+				}
+				else
+				{
+					claimer.setMinimalOverlappingAllocation(claimer.getMinimalOverlappingAllocation() + 
+							((cloneClaimers.get(i - 1).getClaim() - cloneClaimers.get(i - 2).getClaim())/(n - (i - 1))));
+				}
+			}
+		}
+		
+		for(Claimer claimer : input)
+		{
+			for(Claimer cloneClaimer : cloneClaimers)
+			{
+				if(claimer.getId() == cloneClaimer.getId())
+				{
+					claimer.setMinimalOverlappingAllocation(cloneClaimer.getMinimalOverlappingAllocation());
+				}
+			}
+		}
+	}
+	
+	// calculate MO rule 
+	public static void minimalOverlappingRuleAllocation(double estate, List<Claimer> input)
+	{
+		// get maximum claim
+		double maxClaim = 0.0;
+		for(Claimer claimer : input)
+		{
+			if(claimer.getClaim() > maxClaim)
+			{
+				maxClaim = claimer.getClaim();
+			}
+		}
+		
+		if(maxClaim >= estate)
+		{
+			ibnEzra(input);
+		}
+		else
+		{
+			ibnEzra(input);
+			
+			List<Claimer> cloneClaimers = new ArrayList<Claimer>(); // deep copy of input
+			for(Claimer claimer : input)
+			{
+				cloneClaimers.add(new Claimer(claimer.getId(), claimer.getClaim()));
+			}
+			
+			ibnEzra(cloneClaimers);
+			
+			for(Claimer claimer : cloneClaimers)
+			{
+				claimer.setClaim(claimer.getClaim() - claimer.getMinimalOverlappingAllocation());
+			}		
+			
+			CELRuleAllocation(estate - maxClaim, cloneClaimers);
+			
+			for(Claimer claimer : input)
+			{
+				claimer.setMinimalOverlappingAllocation(claimer.getMinimalOverlappingAllocation() + cloneClaimers.get(input.indexOf(claimer)).getCELAllocation());
+			}
+		}
+	}
+	
 	// v(s) function: used as reference point for SRD
 	public static void calculateReference(double estate, List<Coalition> coalitions, List<Claimer> allClaimers)
 	{
@@ -327,6 +416,16 @@ public class RuleCalculator
 			double sumClaimers = sum(entry.getClaimers(), "talmud");
 			
 			entry.setTalmudAllocation(sumClaimers);
+		}
+	}
+	
+	public static void calculateCoalitionMinimalOverlappingAllocation(List<Coalition> coalitions)
+	{
+		for(Coalition entry : coalitions)
+		{
+			double sumClaimers = sum(entry.getClaimers(), "MO");
+			
+			entry.setMinimalOverlappingAllocation(sumClaimers);
 		}
 	}
 	
@@ -442,6 +541,11 @@ public class RuleCalculator
 				for(Claimer element : list)
 				{
 					sumOfElements += element.getTalmudAllocation();
+				}
+			case "MO":
+				for(Claimer element : list)
+				{
+					sumOfElements += element.getMinimalOverlappingAllocation();
 				}
 		}
 				

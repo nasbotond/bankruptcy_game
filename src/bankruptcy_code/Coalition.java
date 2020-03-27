@@ -12,6 +12,7 @@ public class Coalition
 	private double CELAllocation; // constrained equal losses rule
 	private double shapleyValueAllocation;
 	private double talmudAllocation;
+	private double minimalOverlappingAllocation; // MO allocation
 	
 	private double averagePropVariation;
 	private double averageCEAVariation;
@@ -86,6 +87,16 @@ public class Coalition
 	public void setTalmudAllocation(double talmudAllocation) 
 	{
 		this.talmudAllocation = talmudAllocation;
+	}
+
+	public double getMinimalOverlappingAllocation() 
+	{
+		return minimalOverlappingAllocation;
+	}
+
+	public void setMinimalOverlappingAllocation(double minimalOverlappingAllocation) 
+	{
+		this.minimalOverlappingAllocation = minimalOverlappingAllocation;
 	}
 
 	public double getAveragePropVariation() 

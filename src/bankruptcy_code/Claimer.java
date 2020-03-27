@@ -9,6 +9,7 @@ public class Claimer
 	private double CELAllocation; // constrained equal losses rule
 	private double shapleyValue; // shapley values of the claimer
 	private double talmudAllocation; // talmud rule allocation 
+	private double minimalOverlappingAllocation; // MO rule allocation
 	
 	public double getClaim() 
 	{
@@ -73,6 +74,16 @@ public class Claimer
 	public void setTalmudAllocation(double talmudAllocation) 
 	{
 		this.talmudAllocation = talmudAllocation;
+	}
+
+	public double getMinimalOverlappingAllocation() 
+	{
+		return minimalOverlappingAllocation;
+	}
+
+	public void setMinimalOverlappingAllocation(double minimalOverlappingAllocation) 
+	{
+		this.minimalOverlappingAllocation = minimalOverlappingAllocation;
 	}
 
 	public Claimer(char id, double claim)
