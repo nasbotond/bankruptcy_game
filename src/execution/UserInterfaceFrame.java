@@ -335,6 +335,7 @@ public class UserInterfaceFrame extends JFrame
 		RuleCalculator.proportionalRuleAllocation(estateInput, claimers);
 		RuleCalculator.CEARuleAllocation(estateInput, claimers);
 		RuleCalculator.CELRuleAllocation(estateInput, claimers);
+		RuleCalculator.AdjustedProportionalAllocation(estateInput, claimers);
 		RuleCalculator.TalmudRuleAllocation(estateInput, claimers);
 		RuleCalculator.calculateReference(estateInput, coalitions, claimers);
 		
@@ -350,6 +351,7 @@ public class UserInterfaceFrame extends JFrame
 		RuleCalculator.calculateCoalitionProportionalAllocation(coalitions);
 		RuleCalculator.calculateCoalitionCEAAllocation(coalitions);
 		RuleCalculator.calculateCoalitionCELAllocation(coalitions);
+		RuleCalculator.calculateCoalitionAdjustedProportionalAllocation(coalitions);
 		RuleCalculator.calculateCoalitionShapleyAllocation(coalitions);
 		RuleCalculator.calculateCoalitionTalmudAllocation(coalitions);
 		RuleCalculator.calculateCoalitionMinimalOverlappingAllocation(coalitions);
@@ -358,13 +360,16 @@ public class UserInterfaceFrame extends JFrame
 		List<CoalitionWithRankingDifference> prop = RankCalculator.rankingBasedOnProportionalAllocation(coalitions);
 		List<CoalitionWithRankingDifference> cea = RankCalculator.rankingBasedOnCEAAllocation(coalitions);
 		List<CoalitionWithRankingDifference> cel = RankCalculator.rankingBasedOnCELAllocation(coalitions);
+		List<CoalitionWithRankingDifference> aprop = RankCalculator.rankingBasedOnAdjustedProportionalAllocation(coalitions);
 		List<CoalitionWithRankingDifference> shap = RankCalculator.rankingBasedOnShapleyAllocation(coalitions);
 		List<CoalitionWithRankingDifference> tal = RankCalculator.rankingBasedOnTalmudAllocation(coalitions);
 		List<CoalitionWithRankingDifference> mo = RankCalculator.rankingBasedOnMinimalOverlappingAllocation(coalitions);
+
 		
 		RankCalculator.compareRanks(prop, ref);
 		RankCalculator.compareRanks(cea, ref);
 		RankCalculator.compareRanks(cel, ref);
+		RankCalculator.compareRanks(aprop, ref);
 		RankCalculator.compareRanks(shap, ref);
 		RankCalculator.compareRanks(tal, ref);
 		RankCalculator.compareRanks(mo, ref);
@@ -418,6 +423,12 @@ public class UserInterfaceFrame extends JFrame
 		}
 		System.out.println("sum of CEL ranking differences : " + sumRankingDifferences(cel));
 		
+		for(CoalitionWithRankingDifference entry : aprop)
+		{
+			System.out.println("APROP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
+		}
+		System.out.println("sum of APROP ranking differences : " + sumRankingDifferences(aprop));
+		
 		for(CoalitionWithRankingDifference entry : shap)
 		{
 			System.out.println("SHAP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
@@ -444,14 +455,14 @@ public class UserInterfaceFrame extends JFrame
 		{
 			System.out.println(entry.getId() + " PROP: " + entry.getProportionalAllocation() + " CEA: " + entry.getCEAAllocation()
 			+ " CEL: " + entry.getCELAllocation()  + " SHAP: " + entry.getShapleyValue()  + " TAL: " + entry.getTalmudAllocation()
-			+ " MO: " + entry.getMinimalOverlappingAllocation());
+			+ " MO: " + entry.getMinimalOverlappingAllocation() + " APROP: " + entry.getAdjustedProportionalAllocation());
 		}	
 		System.out.println("Coalitions");
 		for(Coalition entry : list2)
 		{
 			System.out.println(entry.getId() + " REF: " + entry.getReference() + " PROP: " + entry.getProportionalAllocation()
 			+ " CEA: " + entry.getCEAAllocation()+ " CEL: " + entry.getCELAllocation() + " SHAP: " + entry.getShapleyValueAllocation()
-			+ " TAL: " + entry.getTalmudAllocation() + " MO: " + entry.getMinimalOverlappingAllocation());
+			+ " TAL: " + entry.getTalmudAllocation() + " MO: " + entry.getMinimalOverlappingAllocation() + " APROP: " + entry.getAdjustedProportionalAllocation());
 		}
 	}
 	

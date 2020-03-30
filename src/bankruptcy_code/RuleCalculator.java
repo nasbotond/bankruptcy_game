@@ -233,6 +233,24 @@ public class RuleCalculator
 		}
 	}
 	
+	public static void AdjustedProportionalAllocation(double estate, List<Claimer> input)
+	{
+		double difference = estate - sum(input, "claims");
+		double sumOfMinimalRights = 0.0;
+		for(Claimer claimer : input)
+		{
+			claimer.setAdjustedProportionalAllocation(Math.max(0, difference + claimer.getClaim()));
+			sumOfMinimalRights += Math.max(0, difference + claimer.getClaim());
+		}
+		
+		for(Claimer claim : input)
+		{
+			claim.setAdjustedProportionalAllocation(claim.getAdjustedProportionalAllocation()
+					+ (Math.min(claim.getClaim() - claim.getAdjustedProportionalAllocation(), estate - sumOfMinimalRights)
+							*(estate - sumOfMinimalRights))/(sum(input, "claims") - sumOfMinimalRights));
+		}		
+	}
+	
 	// calculate talmud allocation
 	public static void TalmudRuleAllocation(double estate, List<Claimer> allClaimers)
 	{
@@ -399,6 +417,16 @@ public class RuleCalculator
 		}
 	}
 	
+	public static void calculateCoalitionAdjustedProportionalAllocation(List<Coalition> coalitions)
+	{
+		for(Coalition entry : coalitions)
+		{
+			double sumClaimers = sum(entry.getClaimers(), "aprop");
+			
+			entry.setAdjustedProportionalAllocation(sumClaimers);
+		}
+	}
+	
 	public static void calculateCoalitionShapleyAllocation(List<Coalition> coalitions)
 	{
 		for(Coalition entry : coalitions)
@@ -550,6 +578,12 @@ public class RuleCalculator
 					sumOfElements += element.getMinimalOverlappingAllocation();
 				}
 				break;
+			case "aprop":
+				for(Claimer element : list)
+				{
+					sumOfElements += element.getAdjustedProportionalAllocation();
+				}
+			break;
 		}
 				
 		return sumOfElements;
