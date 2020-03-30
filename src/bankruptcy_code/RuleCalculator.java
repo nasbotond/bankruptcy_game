@@ -428,7 +428,7 @@ public class RuleCalculator
 			entry.setMinimalOverlappingAllocation(sumClaimers);
 		}
 	}
-	
+	/*
 	// calculateReference must be called before this method to ensure we have the correct reference values
 	// calculates the profit (or surplus) each coalition earns with this rule
 	public static void calculateProportionalVariance(List<Coalition> coalitions, int iteration)
@@ -500,9 +500,9 @@ public class RuleCalculator
 			}	
 		}
 	}
-	
+	*/
 	// finds the sum of the Claims in a given coalition
-	public static double sum(List<Claimer> list, String identifier)
+	private static double sum(List<Claimer> list, String identifier)
 	{
 		double sumOfElements = 0;
 		
@@ -517,7 +517,7 @@ public class RuleCalculator
 			case "prop":
 				for(Claimer element : list)
 				{
-						sumOfElements += element.getProportionalAllocation();
+					sumOfElements += element.getProportionalAllocation();
 				}
 				break;
 			case "CEA":
@@ -537,16 +537,19 @@ public class RuleCalculator
 				{
 					sumOfElements += element.getShapleyValue();
 				}
+				break;
 			case "talmud":
 				for(Claimer element : list)
 				{
 					sumOfElements += element.getTalmudAllocation();
 				}
+				break;
 			case "MO":
 				for(Claimer element : list)
 				{
 					sumOfElements += element.getMinimalOverlappingAllocation();
 				}
+				break;
 		}
 				
 		return sumOfElements;

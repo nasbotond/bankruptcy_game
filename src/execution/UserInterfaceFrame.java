@@ -215,7 +215,7 @@ public class UserInterfaceFrame extends JFrame
 		    thread.start();		
 		}
 	}
-	
+	/*
 	private void calculateAverageVariances()
 	{
 		double minClaim = Double.parseDouble(agentA.getText());
@@ -291,12 +291,12 @@ public class UserInterfaceFrame extends JFrame
 				
 				// System.out.println(stop);
 				// print(claimers, coalitions);
-				/*
+				
 				if(iterations % 10 == 0)
 				{
 					printAverages(coalitions, iterations);					
 				}
-				*/
+				
 				// stop--;
 			}
 		}
@@ -305,7 +305,7 @@ public class UserInterfaceFrame extends JFrame
 		stop = false;
 		// print(claimers, coalitions);
 	}
-	
+	*/
 	private void calculateExactVariance()
 	{
 		int iterations = 1;
