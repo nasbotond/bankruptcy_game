@@ -382,62 +382,76 @@ public class UserInterfaceFrame extends JFrame
 					entry.getProportionalAllocation() + ", CEA profit: " + entry.getCEAAllocation() 
 					+ ", CEL profit: " + entry.getCELAllocation() + ", Shapley profit: " + entry.getShapleyValueAllocation());
 		}
-		*/
+		
 		for(Claimer cl : claimers)
 		{
 			System.out.println("MO  " + cl.getId() + " " + cl.getMinimalOverlappingAllocation());
-			/*
+			
 			System.out.println("TALMUD  " + cl.getId() + " " + cl.getTalmudAllocation());
 			System.out.println("CEA  " + cl.getId() + " " + cl.getCEAAllocation());
 			System.out.println("CEL  " + cl.getId() + " " + cl.getCELAllocation());
-			*/
+			
 		}
-		
+		*/
+		print(claimers, coalitions);
 		for(CoalitionWithRankingDifference entry : ref)
 		{
 			System.out.println("REF   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank());
 		}
+		System.out.println("sum of REF ranking differences : " + sumRankingDifferences(ref));
 		
 		for(CoalitionWithRankingDifference entry : prop)
 		{
 			System.out.println("PROP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 		}
+		System.out.println("sum of PROP ranking differences : " + sumRankingDifferences(prop));
 		
 		for(CoalitionWithRankingDifference entry : cea)
 		{
 			System.out.println("CEA   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 		}
+		System.out.println("sum of CEA ranking differences : " + sumRankingDifferences(cea));
 		
 		for(CoalitionWithRankingDifference entry : cel)
 		{
 			System.out.println("CEL   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 		}
+		System.out.println("sum of CEL ranking differences : " + sumRankingDifferences(cel));
 		
 		for(CoalitionWithRankingDifference entry : shap)
 		{
 			System.out.println("SHAP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 		}	
+		System.out.println("sum of SHAP ranking differences : " + sumRankingDifferences(shap));
 		
 		for(CoalitionWithRankingDifference entry : tal)
 		{
 			System.out.println("TAL   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 		}
+		System.out.println("sum of TAL ranking differences : " + sumRankingDifferences(tal));
 		
 		for(CoalitionWithRankingDifference entry : mo)
 		{
 			System.out.println("MO   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 		}
+		System.out.println("sum of MO ranking differences : " + sumRankingDifferences(mo));
 	}
 	
 	private static void print(List<Claimer> list1, List<Coalition> list2)
 	{	
+		System.out.println("Claimers");
 		for(Claimer entry : list1)
 		{
-			System.out.println(entry.getId() + " prop: " + entry.getProportionalAllocation() + " CEA: " + entry.getCEAAllocation() + " CEL: " + entry.getCELAllocation());
-		}		
+			System.out.println(entry.getId() + " PROP: " + entry.getProportionalAllocation() + " CEA: " + entry.getCEAAllocation()
+			+ " CEL: " + entry.getCELAllocation()  + " SHAP: " + entry.getShapleyValue()  + " TAL: " + entry.getTalmudAllocation()
+			+ " MO: " + entry.getMinimalOverlappingAllocation());
+		}	
+		System.out.println("Coalitions");
 		for(Coalition entry : list2)
 		{
-			System.out.println(entry.getId() + " ref: " + entry.getReference() + " prop: " + entry.getProportionalAllocation() + " CEA: " + entry.getCEAAllocation()+ " CEL: " + entry.getCELAllocation());
+			System.out.println(entry.getId() + " REF: " + entry.getReference() + " PROP: " + entry.getProportionalAllocation()
+			+ " CEA: " + entry.getCEAAllocation()+ " CEL: " + entry.getCELAllocation() + " SHAP: " + entry.getShapleyValueAllocation()
+			+ " TAL: " + entry.getTalmudAllocation() + " MO: " + entry.getMinimalOverlappingAllocation());
 		}
 	}
 	
@@ -448,6 +462,16 @@ public class UserInterfaceFrame extends JFrame
 		{
 			System.out.println(entry.getId() + " ref: " + entry.getReference() + " prop avg.: " + entry.getAveragePropVariation() + " CEA avg.: " + entry.getAverageCEAVariation() + " CEL avg.: " + entry.getAverageCELVariation()+ " Shap avg.: " + entry.getAverageShapleyValueVariation());
 		}
+	}
+	
+	private static double sumRankingDifferences(List<CoalitionWithRankingDifference> input)
+	{
+		double sum = 0.0;
+		for(CoalitionWithRankingDifference coalition : input)
+		{
+			sum += coalition.getRankingDifference();
+		}
+		return sum;
 	}
 	
 	private static <T> List<List<T>> combination(List<T> values, int size)
