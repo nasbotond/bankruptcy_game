@@ -124,7 +124,7 @@ public class RuleCalculator
 				Claimer claimer = iterator.next();
 				if(claimer.getCEAAllocation() + equal >= claimer.getClaim()) // needed to dynamically remove from the list
 				{
-					surplus -= claimer.getClaim();
+					surplus -= claimer.getClaim() - claimer.getCEAAllocation();
 					// entry.setValue(false);
 					for(Claimer inputClaimer : input)
 					{
@@ -198,7 +198,7 @@ public class RuleCalculator
 		double sumOfClaims = sum(doneClaimers, "claims");
 		double deficit = sumOfClaims - estate;
 		double equal = deficit/doneClaimers.size();
-		while(deficit > 0)
+		while(deficit > 0.00001)
 		{
 			for(Iterator<Claimer> iterator = doneClaimers.iterator(); iterator.hasNext();)
 			{
@@ -233,7 +233,7 @@ public class RuleCalculator
 		}
 	}
 	
-	public static void AdjustedProportionalAllocation(double estate, List<Claimer> input)
+	public static void adjustedProportionalAllocation(double estate, List<Claimer> input)
 	{
 		double difference = estate - sum(input, "claims");
 		double sumOfMinimalRights = 0.0;
@@ -252,7 +252,7 @@ public class RuleCalculator
 	}
 	
 	// calculate talmud allocation
-	public static void TalmudRuleAllocation(double estate, List<Claimer> allClaimers)
+	public static void talmudRuleAllocation(double estate, List<Claimer> allClaimers)
 	{
 		double halvesSum = 0.0;
 		List<Claimer> halvedClaimClaimers = new ArrayList<Claimer>(); // deep copy of allClaimers with adjusted claims (halved)
@@ -373,6 +373,112 @@ public class RuleCalculator
 		}
 	}
 	
+	public static void clightsRuleAllocation(double estate, List<Claimer> input)
+	{		
+		List<Claimer> cloneClaimers = new ArrayList<Claimer>(); // deep copy of input
+		for(Claimer claimer : input)
+		{
+			cloneClaimers.add(new Claimer(claimer.getId(), claimer.getClaim()));
+		}
+		
+		// sort lowest claim to highest claim
+		Collections.sort(cloneClaimers, new Comparator<Claimer>(){
+		     public int compare(Claimer o1, Claimer o2){
+		         if(o1.getClaim() == o2.getClaim())
+		             return 0;
+		         return o1.getClaim() < o2.getClaim() ? -1 : 1;
+		     }
+		});
+		
+		double sumOfClights = 0.0;
+		for(Claimer c : cloneClaimers)
+		{
+			sumOfClights += calculateClightVector(cloneClaimers, cloneClaimers.indexOf(c) + 1);
+		}
+		if(sumOfClights >= estate)
+		{
+			double[] clights = new double[cloneClaimers.size()];
+			for(Claimer claimer : cloneClaimers)
+			{
+				clights[cloneClaimers.indexOf(claimer)] = calculateClightVector(cloneClaimers, cloneClaimers.indexOf(claimer) + 1);
+			}
+			
+			for(Claimer claimer : cloneClaimers)
+			{
+				claimer.setClaim(clights[cloneClaimers.indexOf(claimer)]);
+			}
+			CEARuleAllocation(estate, cloneClaimers);
+			
+			for(Claimer originals : input)
+			{
+				for(Claimer clones : cloneClaimers)
+				{
+					if(originals.getId() == clones.getId())
+					{
+						originals.setClightsAllocation(clones.getCEAAllocation());
+					}
+				}
+			}
+		}
+		else
+		{
+			double[] clights = new double[cloneClaimers.size()];
+			for(Claimer claimer : cloneClaimers)
+			{
+				clights[cloneClaimers.indexOf(claimer)] = calculateClightVector(cloneClaimers, cloneClaimers.indexOf(claimer) + 1);			
+			}
+			for(Claimer claimer : cloneClaimers)
+			{
+				claimer.setClaim(claimer.getClaim() - clights[cloneClaimers.indexOf(claimer)]);
+			}
+			CELRuleAllocation(estate - sumOfClights, cloneClaimers);
+			
+			for(Claimer originals : input)
+			{
+				for(Claimer clones : cloneClaimers)
+				{
+					if(originals.getId() == clones.getId())
+					{
+						originals.setClightsAllocation(clights[cloneClaimers.indexOf(clones)] + clones.getCELAllocation());
+					}
+				}
+			}
+		}
+		
+	}
+	
+	public static double calculateClightVector(List<Claimer> input, int vectorNum)
+	{
+		double n = input.size();
+		double[] vector = new double[vectorNum];
+		for(int j = vectorNum; j > 0; j--)
+		{
+			double sum = 0.0;
+			if(j > 1)
+			{
+				for(int m = j - 1; m > 0; m--)
+				{
+					sum = sum + calculateClightVector(input, m);
+				}
+				vector[j-1] = (1/(n+((double)j)-1)) * (((double)j)*input.get(vectorNum-1).getClaim() - ((n - 1) * sum));
+			}
+			else
+			{				
+				vector[j-1] = (1/(n+((double)j)-1)) * (((double)j)*input.get(vectorNum-1).getClaim());
+			}
+		}
+		
+		double max = 0.0;
+		for(int i = 0; i < vector.length; i++)
+		{
+			if(vector[i] > max)
+			{
+				max = vector[i];
+			}
+		}
+		return max;
+	}
+	
 	// v(s) function: used as reference point for SRD
 	public static void calculateReference(double estate, List<Coalition> coalitions, List<Claimer> allClaimers)
 	{
@@ -454,6 +560,16 @@ public class RuleCalculator
 			double sumClaimers = sum(entry.getClaimers(), "MO");
 			
 			entry.setMinimalOverlappingAllocation(sumClaimers);
+		}
+	}
+	
+	public static void calculateCoalitionClightsAllocation(List<Coalition> coalitions)
+	{
+		for(Coalition entry : coalitions)
+		{
+			double sumClaimers = sum(entry.getClaimers(), "cli");
+			
+			entry.setClightsAllocation(sumClaimers);
 		}
 	}
 	/*
@@ -582,6 +698,12 @@ public class RuleCalculator
 				for(Claimer element : list)
 				{
 					sumOfElements += element.getAdjustedProportionalAllocation();
+				}
+			break;
+			case "cli":
+				for(Claimer element : list)
+				{
+					sumOfElements += element.getClightsAllocation();
 				}
 			break;
 		}

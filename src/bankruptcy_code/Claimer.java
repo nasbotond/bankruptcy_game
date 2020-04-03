@@ -11,6 +11,7 @@ public class Claimer
 	private double talmudAllocation; // talmud rule allocation 
 	private double adjustedProportionalAllocation; // adjusted proportional rule allocation
 	private double minimalOverlappingAllocation; // MO rule allocation
+	private double clightsAllocation; // per capita nucleolus (clight's rule)
 	
 	public double getClaim() 
 	{
@@ -95,6 +96,16 @@ public class Claimer
 	public void setMinimalOverlappingAllocation(double minimalOverlappingAllocation) 
 	{
 		this.minimalOverlappingAllocation = minimalOverlappingAllocation;
+	}
+
+	public double getClightsAllocation()
+	{
+		return clightsAllocation;
+	}
+
+	public void setClightsAllocation(double clightsAllocation) 
+	{
+		this.clightsAllocation = clightsAllocation;
 	}
 
 	public Claimer(char id, double claim)

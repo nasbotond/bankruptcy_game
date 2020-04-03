@@ -315,8 +315,7 @@ public class UserInterfaceFrame extends JFrame
 		claimers.add(new Claimer('a', Double.parseDouble(agentA.getText())));
 		claimers.add(new Claimer('b', Double.parseDouble(agentB.getText())));
 		claimers.add(new Claimer('c', Double.parseDouble(agentC.getText())));
-		claimers.add(new Claimer('d', Double.parseDouble(agentD.getText())));
-		
+		claimers.add(new Claimer('d', Double.parseDouble(agentD.getText())));		
 		
 		List<LinkedList<Claimer>> powerSet = new LinkedList<LinkedList<Claimer>>();
 		
@@ -335,8 +334,9 @@ public class UserInterfaceFrame extends JFrame
 		RuleCalculator.proportionalRuleAllocation(estateInput, claimers);
 		RuleCalculator.CEARuleAllocation(estateInput, claimers);
 		RuleCalculator.CELRuleAllocation(estateInput, claimers);
-		RuleCalculator.AdjustedProportionalAllocation(estateInput, claimers);
-		RuleCalculator.TalmudRuleAllocation(estateInput, claimers);
+		RuleCalculator.adjustedProportionalAllocation(estateInput, claimers);
+		RuleCalculator.talmudRuleAllocation(estateInput, claimers);
+		RuleCalculator.clightsRuleAllocation(estateInput, claimers);
 		RuleCalculator.calculateReference(estateInput, coalitions, claimers);
 		
 		RuleCalculator.calculateShapleyValues(claimers, coalitions); // needs to be after calculateReference() because it needs the reference values for calculation
@@ -355,6 +355,7 @@ public class UserInterfaceFrame extends JFrame
 		RuleCalculator.calculateCoalitionShapleyAllocation(coalitions);
 		RuleCalculator.calculateCoalitionTalmudAllocation(coalitions);
 		RuleCalculator.calculateCoalitionMinimalOverlappingAllocation(coalitions);
+		RuleCalculator.calculateCoalitionClightsAllocation(coalitions);
 		
 		List<CoalitionWithRankingDifference> ref = RankCalculator.rankingBasedOnReference(coalitions);
 		List<CoalitionWithRankingDifference> prop = RankCalculator.rankingBasedOnProportionalAllocation(coalitions);
@@ -364,6 +365,7 @@ public class UserInterfaceFrame extends JFrame
 		List<CoalitionWithRankingDifference> shap = RankCalculator.rankingBasedOnShapleyAllocation(coalitions);
 		List<CoalitionWithRankingDifference> tal = RankCalculator.rankingBasedOnTalmudAllocation(coalitions);
 		List<CoalitionWithRankingDifference> mo = RankCalculator.rankingBasedOnMinimalOverlappingAllocation(coalitions);
+		List<CoalitionWithRankingDifference> cli = RankCalculator.rankingBasedOnClightsAllocation(coalitions);
 
 		
 		RankCalculator.compareRanks(prop, ref);
@@ -373,6 +375,7 @@ public class UserInterfaceFrame extends JFrame
 		RankCalculator.compareRanks(shap, ref);
 		RankCalculator.compareRanks(tal, ref);
 		RankCalculator.compareRanks(mo, ref);
+		RankCalculator.compareRanks(cli, ref);
 		
 		/*
 		for(Claimer entry : claimers)
@@ -446,6 +449,12 @@ public class UserInterfaceFrame extends JFrame
 			System.out.println("MO   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 		}
 		System.out.println("sum of MO ranking differences : " + sumRankingDifferences(mo));
+		
+		for(CoalitionWithRankingDifference entry : cli)
+		{
+			System.out.println("CLI   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
+		}
+		System.out.println("sum of CLI ranking differences : " + sumRankingDifferences(cli));
 	}
 	
 	private static void print(List<Claimer> list1, List<Coalition> list2)
@@ -455,14 +464,16 @@ public class UserInterfaceFrame extends JFrame
 		{
 			System.out.println(entry.getId() + " PROP: " + entry.getProportionalAllocation() + " CEA: " + entry.getCEAAllocation()
 			+ " CEL: " + entry.getCELAllocation()  + " SHAP: " + entry.getShapleyValue()  + " TAL: " + entry.getTalmudAllocation()
-			+ " MO: " + entry.getMinimalOverlappingAllocation() + " APROP: " + entry.getAdjustedProportionalAllocation());
+			+ " MO: " + entry.getMinimalOverlappingAllocation() + " APROP: " + entry.getAdjustedProportionalAllocation()
+			+ " CLI: " + entry.getClightsAllocation());
 		}	
 		System.out.println("Coalitions");
 		for(Coalition entry : list2)
 		{
 			System.out.println(entry.getId() + " REF: " + entry.getReference() + " PROP: " + entry.getProportionalAllocation()
 			+ " CEA: " + entry.getCEAAllocation()+ " CEL: " + entry.getCELAllocation() + " SHAP: " + entry.getShapleyValueAllocation()
-			+ " TAL: " + entry.getTalmudAllocation() + " MO: " + entry.getMinimalOverlappingAllocation() + " APROP: " + entry.getAdjustedProportionalAllocation());
+			+ " TAL: " + entry.getTalmudAllocation() + " MO: " + entry.getMinimalOverlappingAllocation() + " APROP: " + entry.getAdjustedProportionalAllocation()
+			+ " CLI: " + entry.getClightsAllocation());
 		}
 	}
 	

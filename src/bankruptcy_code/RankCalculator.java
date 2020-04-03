@@ -250,6 +250,36 @@ public class RankCalculator
 		return coalitionsRanked;
 	}
 	
+	public static List<CoalitionWithRankingDifference> rankingBasedOnClightsAllocation(List<Coalition> coalitions)
+	{
+		List<Coalition> copyWithoutFullCoalition = new ArrayList<Coalition>(coalitions);
+		
+		copyWithoutFullCoalition.remove(coalitions.size() - 1);
+		
+		List<CoalitionWithRankingDifference> coalitionsRanked = new ArrayList<CoalitionWithRankingDifference>();
+		
+		for(Coalition coalitionFirst : copyWithoutFullCoalition)
+		{
+			double r = 1.0, s = 1.0;
+			
+			for(Coalition coalitionSecond : copyWithoutFullCoalition)
+			{
+				if(!coalitionFirst.equals(coalitionSecond) && coalitionFirst.getClightsAllocation() > coalitionSecond.getClightsAllocation())
+				{
+					r += 1;
+				}
+				if(!coalitionFirst.equals(coalitionSecond) && coalitionFirst.getClightsAllocation() == coalitionSecond.getClightsAllocation())
+				{
+					s += 1;
+				}			
+			}
+			
+			coalitionsRanked.add(new CoalitionWithRankingDifference(coalitionFirst, (r + (s - 1) / 2)));
+		}
+		
+		return coalitionsRanked;
+	}
+	
 	// find the difference between a rank and the reference rank
 	public static void compareRanks(List<CoalitionWithRankingDifference> coalitions, List<CoalitionWithRankingDifference> reference)
 	{
