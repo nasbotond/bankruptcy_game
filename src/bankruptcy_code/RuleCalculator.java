@@ -242,12 +242,17 @@ public class RuleCalculator
 			claimer.setAdjustedProportionalAllocation(Math.max(0, difference + claimer.getClaim()));
 			sumOfMinimalRights += Math.max(0, difference + claimer.getClaim());
 		}
+		double sumAdjustedClaims = 0.0;
+		for(Claimer claimer : input)
+		{
+			sumAdjustedClaims += Math.min(claimer.getClaim() - claimer.getAdjustedProportionalAllocation(), estate - sumOfMinimalRights);
+		}
 		
 		for(Claimer claim : input)
 		{
 			claim.setAdjustedProportionalAllocation(claim.getAdjustedProportionalAllocation()
 					+ (Math.min(claim.getClaim() - claim.getAdjustedProportionalAllocation(), estate - sumOfMinimalRights)
-							*(estate - sumOfMinimalRights))/(sum(input, "claims") - sumOfMinimalRights));
+							*(estate - sumOfMinimalRights))/sumAdjustedClaims);
 		}		
 	}
 	
