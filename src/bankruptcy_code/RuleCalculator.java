@@ -287,7 +287,7 @@ public class RuleCalculator
 		}
 	}
 	
-	private static void ibnEzra(List<Claimer> input)
+	private static void ibnEzra(double estate, List<Claimer> input)
 	{
 		List<Claimer> cloneClaimers = new ArrayList<Claimer>(); // deep copy of input
 		for(Claimer claimer : input)
@@ -313,12 +313,13 @@ public class RuleCalculator
 				if(i == 1)
 				{
 					claimer.setMinimalOverlappingAllocation(claimer.getMinimalOverlappingAllocation() + 
-							(cloneClaimers.get(i - 1).getClaim()/n));
+							(Math.min(cloneClaimers.get(i - 1).getClaim(), estate)/n));
 				}
 				else
 				{
 					claimer.setMinimalOverlappingAllocation(claimer.getMinimalOverlappingAllocation() + 
-							((cloneClaimers.get(i - 1).getClaim() - cloneClaimers.get(i - 2).getClaim())/(n - (i - 1))));
+							((Math.min(cloneClaimers.get(i - 1).getClaim(), estate) - Math.min(cloneClaimers.get(i - 2).getClaim(), estate))
+									/(n - (i - 1))));
 				}
 			}
 		}
@@ -350,11 +351,11 @@ public class RuleCalculator
 		
 		if(maxClaim >= estate)
 		{
-			ibnEzra(input);
+			ibnEzra(estate, input);
 		}
 		else
 		{
-			ibnEzra(input);
+			ibnEzra(estate, input);
 			
 			List<Claimer> cloneClaimers = new ArrayList<Claimer>(); // deep copy of input
 			for(Claimer claimer : input)
@@ -362,7 +363,7 @@ public class RuleCalculator
 				cloneClaimers.add(new Claimer(claimer.getId(), claimer.getClaim()));
 			}
 			
-			ibnEzra(cloneClaimers);
+			ibnEzra(estate, cloneClaimers);
 			
 			for(Claimer claimer : cloneClaimers)
 			{
