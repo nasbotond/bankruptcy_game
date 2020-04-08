@@ -13,22 +13,10 @@ public class Main
 	{
 		
 		EventQueue.invokeLater(() -> {
-			UserInterfaceFrame frame = new UserInterfaceFrame();
-			/*
-			List<String> stringlist = new ArrayList<String>();
-			stringlist.add("a");
-			stringlist.add("b");
-			stringlist.add("c");
-			stringlist.add("d");
-			stringlist.add("e");
-			
-			List<List<String>> perm = frame.generatePerm(stringlist);
-			for(List<String> item : perm)
-			{
-				System.out.println(item);
-			}
-			*/
-			frame.setVisible(true);
+			// ExactUIFrame frame = new ExactUIFrame();
+			SimulationUIFrame frame1 = new SimulationUIFrame();
+			// frame.setVisible(true);
+			frame1.setVisible(true);
 		});
 		
 		

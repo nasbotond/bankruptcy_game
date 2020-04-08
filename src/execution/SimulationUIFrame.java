@@ -4,27 +4,34 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 
 import bankruptcy_code.Claimer;
 import bankruptcy_code.Coalition;
@@ -33,19 +40,21 @@ import bankruptcy_code.RankCalculator;
 import bankruptcy_code.RuleCalculator;
 
 @SuppressWarnings("serial")
-public class UserInterfaceFrame extends JFrame 
+public class SimulationUIFrame extends JFrame
 {
-	private JTextField estate;
-	private JTextField agentA;
-	private JTextField agentB;
-	private JTextField agentC;
-	private JTextField agentD;
+	private JTextField numberOfCreditors;
 	
-	private JLabel estateLabel;
-	private JLabel agentALabel;
-	private JLabel agentBLabel;
-	private JLabel agentCLabel;
-	private JLabel agentDLabel;
+	private JLabel numberOfCreditorsLabel;
+	
+	private JLabel maximumDiffLabel;
+	private JLabel propLabel;
+	private JLabel ceaLabel;
+	private JLabel celLabel;
+	private JLabel apropLabel;
+	private JLabel shapLabel;
+	private JLabel talLabel;
+	private JLabel moLabel;
+	private JLabel cliLabel;
 	
 	private JButton runButton;
 	private JButton stopButton;
@@ -53,32 +62,35 @@ public class UserInterfaceFrame extends JFrame
 	private JPanel canvasPanel;
 	private JPanel inputsPanel;
 	private JPanel buttonsPanel;
+	private JPanel averagesPanel;
 	
 	private JPanel consolePanel;
 	private JTextArea consoleOutput;
 	
 	private JLabel numIterations;
+	private boolean stop = false;	
 	
-	private int iterations;
-	private boolean stop = false;
-	
-	
-	public UserInterfaceFrame()
+	public SimulationUIFrame()
 	{
 		this.setLayout(new GridLayout());
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setBackground(Color.WHITE);
 		this.setTitle("BANKRUPTCY GAME");
 		
 		canvasPanel = new JPanel(new BorderLayout());
+		canvasPanel.setBackground(Color.WHITE);
 		
 		buttonsPanel = new JPanel(new FlowLayout());
+		buttonsPanel.setBackground(Color.WHITE);
 		
 		// run button action
-		runButton = new JButton("calculate");
+		runButton = createSimpleButton("Calculate");
+		runButton.setFont(new Font("Serif", Font.PLAIN, 21));
 		runButton.addActionListener(new RunButtonActionListener());
 		
 		// stop button action
-		stopButton = new JButton("stop");
+		stopButton = createSimpleButton("Stop");
+		stopButton.setFont(new Font("Serif", Font.PLAIN, 21));
 		stopButton.addActionListener(new StopButtonActionListener());
 		
 		buttonsPanel.add(runButton);
@@ -86,38 +98,17 @@ public class UserInterfaceFrame extends JFrame
 		
 		// inputs
 		
-		estateLabel = new JLabel("Estate/Endowment: ");
-		agentALabel = new JLabel("Agent A: ");
-		agentBLabel = new JLabel("Agent B: ");
-		agentCLabel = new JLabel("Agent C: ");
-		agentDLabel = new JLabel("Agent D: ");
+		numberOfCreditorsLabel = new JLabel("Number of Creditors: ");
+		numberOfCreditorsLabel.setFont(new Font("Serif", Font.PLAIN, 21));
 		
-		/*
-		estateLabel = new JLabel("Estate/Endowment: ");
-		agentALabel = new JLabel("Minimum Claim: ");
-		agentBLabel = new JLabel("Maximum Claim: ");
-		agentCLabel = new JLabel("Number of Agents: ");
-		// agentDLabel = new JLabel("Agent D: ");
-		*/
-		
-		estate = new JTextField(4);
-		agentA = new JTextField(4);
-		agentB = new JTextField(4);
-		agentC = new JTextField(4);
-		agentD = new JTextField(4);
+		numberOfCreditors = new JTextField(4);
+		numberOfCreditors.setFont(new Font("Serif", Font.PLAIN, 21));
 		
 		inputsPanel = new JPanel();
+		inputsPanel.setBackground(Color.WHITE);
 		
-		inputsPanel.add(estateLabel);
-		inputsPanel.add(estate);
-		inputsPanel.add(agentALabel);
-		inputsPanel.add(agentA);
-		inputsPanel.add(agentBLabel);
-		inputsPanel.add(agentB);
-		inputsPanel.add(agentCLabel);
-		inputsPanel.add(agentC);
-		inputsPanel.add(agentDLabel);
-		inputsPanel.add(agentD);
+		inputsPanel.add(numberOfCreditorsLabel);
+		inputsPanel.add(numberOfCreditors);
 		
 		canvasPanel.add(inputsPanel, BorderLayout.NORTH);
 		canvasPanel.add(buttonsPanel, BorderLayout.CENTER);
@@ -125,14 +116,52 @@ public class UserInterfaceFrame extends JFrame
 		// numIterations display:
 		//
 		numIterations = new JLabel("iterations: " + 0);
+		numIterations.setFont(new Font("Serif", Font.BOLD, 21));
 		numIterations.setHorizontalAlignment(JLabel.CENTER);
 		buttonsPanel.add(numIterations);
-		//		
-				
+		//	
 		
-		// console panel:
+		// averages display:
 		//
 		
+		averagesPanel = new JPanel();
+		averagesPanel.setBackground(Color.WHITE);
+		averagesPanel.setLayout(new BoxLayout(averagesPanel, BoxLayout.Y_AXIS));
+		averagesPanel.setBorder(new EmptyBorder(new Insets(0, 50, 100, 0)));
+		
+		maximumDiffLabel = new JLabel("Maximum: ");
+		maximumDiffLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+		propLabel = new JLabel("Average Proportional Rule SRD: ");
+		propLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+		ceaLabel = new JLabel("Average CEA Rule SRD: ");
+		ceaLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+		celLabel = new JLabel("Average CEL Rule SRD: ");
+		celLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+		apropLabel = new JLabel("Average Adjusted Proportional Rule SRD:");
+		apropLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+		shapLabel = new JLabel("Average Shapley Value SRD:");
+		shapLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+		talLabel = new JLabel("Average Talmud Rule SRD:");
+		talLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+		moLabel = new JLabel("Average Minimal Overlap Rule SRD:");
+		moLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+		cliLabel = new JLabel("Average Per Capita Nucleolous Rule SRD:");
+		cliLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+		
+		averagesPanel.add(maximumDiffLabel);
+		averagesPanel.add(propLabel);
+		averagesPanel.add(ceaLabel);
+		averagesPanel.add(celLabel);
+		averagesPanel.add(apropLabel);
+		averagesPanel.add(shapLabel);
+		averagesPanel.add(talLabel);
+		averagesPanel.add(moLabel);
+		averagesPanel.add(cliLabel);
+		
+		canvasPanel.add(averagesPanel, BorderLayout.SOUTH);
+		// console panel:
+		//
+		/*
 		consolePanel = new JPanel();
 		consolePanel.setBackground(Color.WHITE);
 						
@@ -153,45 +182,48 @@ public class UserInterfaceFrame extends JFrame
 		//
 		
 		canvasPanel.add(consolePanel, BorderLayout.SOUTH);
-		
+		*/
 		
 		this.add(canvasPanel);
 		
-		this.setPreferredSize(new Dimension(700, 675)); // 525, 750
+		this.setPreferredSize(new Dimension(700, 600)); // 525, 750
 		this.setResizable(false);
 		this.pack();
 		this.setLocationRelativeTo(null);
 	}
 	
 	private class RunButtonActionListener implements ActionListener 
-	{
+	{		
 		@Override
 		public void actionPerformed(ActionEvent event)
 		{	
-			Thread thread = new Thread(new Runnable()
-		    {
-		    	@Override
-		    	public void run()
-		    	{
-		    		try
-		    		{
-		    			// calculateExactVariance();
-		    			calculateAverageSRD();
-		    			
-		    			// disableAllButtons();
-		    			// System.out.println("Averages will be displayed after stop is clicked...");
-		    			// calculateAverageVariances();
-		    							    			
-					}
-		    		catch(Exception exception)  // TODO?
-		    		{
-						exception.printStackTrace();
-					}
-		    	}
-		    });
-		    
-		    thread.start();		
+			if(!numberOfCreditors.getText().isEmpty())
+			{
+				disableAllButtons();
+				Thread thread = new Thread(new Runnable()
+			    {
+			    	@Override
+			    	public void run()
+			    	{
+			    		try
+			    		{
+			    			calculateAverageSRD();	    					    							    			
+						}
+			    		catch(Exception exception)  // TODO?
+			    		{
+							exception.printStackTrace();
+						}
+			    	}
+			    });
+			    
+			    thread.start();
+			}
+			else
+			{
+				JOptionPane.showMessageDialog(new JFrame(), "Please input number of creditors", "ERROR", JOptionPane.ERROR_MESSAGE);
+			}
 		}
+		
 	}
 	
 	private class StopButtonActionListener implements ActionListener 
@@ -221,7 +253,7 @@ public class UserInterfaceFrame extends JFrame
 	
 	private void calculateAverageSRD()
 	{
-		final int numClaimers = Integer.parseInt(agentC.getText());
+		final int numClaimers = Integer.parseInt(numberOfCreditors.getText());
 		double estate;
 		int iterations = 1;
 		
@@ -260,16 +292,18 @@ public class UserInterfaceFrame extends JFrame
 			coalitions.add(new Coalition(entry));
 		}
 		
+		maximumDiffLabel.setText("Maximum: " + (coalitions.size() - 1)*((coalitions.size() - 1) / 2)); // TODO
+		
 		estate = generateUniformRandom(RuleCalculator.sum(claimers, "claims")/2, RuleCalculator.sum(claimers, "claims"));
 		
-		System.out.println("estate: " + estate);
+		// System.out.println("estate: " + estate);
 		
 		calculateClaimerRuleAllocations(estate, claimers);
 		RuleCalculator.calculateReference(estate, coalitions, claimers);
 		RuleCalculator.calculateShapleyValues(claimers, coalitions);
 		calculateCoalitionRuleAllocations(coalitions);	
 		
-		print(claimers, coalitions);
+		// print(claimers, coalitions);
 		
 		ref = RankCalculator.rankingBasedOnReference(coalitions);
 		prop = RankCalculator.rankingBasedOnProportionalAllocation(coalitions);
@@ -302,7 +336,7 @@ public class UserInterfaceFrame extends JFrame
 		averageSRD.put("mo", sumRankingDifferences(mo));
 		averageSRD.put("cli", sumRankingDifferences(cli));
 		
-		System.out.println("loop start");
+		// System.out.println("loop start");
 		
 		while(!stop)
 		{		
@@ -358,10 +392,29 @@ public class UserInterfaceFrame extends JFrame
 			
 			if(iterations % 10 == 0)
 			{
+				propLabel.setText("Average Proportional Rule SRD: " + averageSRD.get("prop"));
+				// propLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+				ceaLabel.setText("Average CEA Rule SRD: " + averageSRD.get("cea"));
+				// ceaLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+				celLabel.setText("Average CEL Rule SRD: " + averageSRD.get("cel"));
+				// celLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+				apropLabel.setText("Average Adjusted Proportional Rule SRD: " + averageSRD.get("aprop"));
+				// apropLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+				shapLabel.setText("Average Shapley Value SRD: " + averageSRD.get("shap"));
+				// shapLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+				talLabel.setText("Average Talmud Rule SRD: " + averageSRD.get("tal"));
+				// talLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+				moLabel.setText("Average Minimal Overlap Rule SRD: " + averageSRD.get("mo"));
+				// moLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+				cliLabel.setText("Average Per Capita Nucleolous Rule SRD: " + averageSRD.get("cli"));
+				// cliLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+				/*
 				for(Map.Entry<String, Double> entry : averageSRD.entrySet())
 				{
-					System.out.println(entry.getKey() + ": " + entry.getValue());
+					// System.out.println(entry.getKey() + ": " + entry.getValue());
+					
 				}
+				*/
 			}
 			/*
 			try 
@@ -376,165 +429,9 @@ public class UserInterfaceFrame extends JFrame
 			numIterations.setText("iterations: " + iterations);  // update iterations label in UI
 		}
 		
-		System.out.println("done.");
-		/*
-		for(Map.Entry<String, Double> entry : averageSRD.entrySet())
-		{
-			System.out.println(entry.getKey() + ": " + entry.getValue());
-		}
-		*/
+		// System.out.println("done.");
 		enableAllButtons();
 		stop = false;
-	}
-	
-	private void calculateExactVariance()
-	{
-		double estateInput = Double.parseDouble(estate.getText());
-		List<Claimer> claimers = new ArrayList<Claimer>();
-		
-		claimers.add(new Claimer('a', Double.parseDouble(agentA.getText())));
-		claimers.add(new Claimer('b', Double.parseDouble(agentB.getText())));
-		claimers.add(new Claimer('c', Double.parseDouble(agentC.getText())));
-		claimers.add(new Claimer('d', Double.parseDouble(agentD.getText())));		
-		
-		List<LinkedList<Claimer>> powerSet = new LinkedList<LinkedList<Claimer>>();
-		
-		for(int i = 1; i <= claimers.size(); i++)
-		{
-			powerSet.addAll((Collection<? extends LinkedList<Claimer>>) combination(claimers, i));
-		}
-		
-		List<Coalition> coalitions = new ArrayList<Coalition>(); // master list of coalitions
-		
-		for(LinkedList<Claimer> entry : powerSet)
-		{
-			coalitions.add(new Coalition(entry));
-		}
-		calculateClaimerRuleAllocations(estateInput, claimers);
-		/*
-		RuleCalculator.proportionalRuleAllocation(estateInput, claimers);
-		RuleCalculator.CEARuleAllocation(estateInput, claimers);
-		RuleCalculator.CELRuleAllocation(estateInput, claimers);
-		RuleCalculator.adjustedProportionalAllocation(estateInput, claimers);
-		RuleCalculator.talmudRuleAllocation(estateInput, claimers);
-		RuleCalculator.clightsRuleAllocation(estateInput, claimers);
-		*/
-		RuleCalculator.calculateReference(estateInput, coalitions, claimers);
-		
-		RuleCalculator.calculateShapleyValues(claimers, coalitions); // needs to be after calculateReference() because it needs the reference values for calculation
-		// RuleCalculator.minimalOverlappingRuleAllocation(estateInput, claimers);
-		
-		/*
-		RuleCalculator.calculateCoalitionProportionalAllocation(coalitions);
-		RuleCalculator.calculateCoalitionCEAAllocation(coalitions);
-		RuleCalculator.calculateCoalitionCELAllocation(coalitions);
-		RuleCalculator.calculateCoalitionAdjustedProportionalAllocation(coalitions);
-		RuleCalculator.calculateCoalitionShapleyAllocation(coalitions);
-		RuleCalculator.calculateCoalitionTalmudAllocation(coalitions);
-		RuleCalculator.calculateCoalitionMinimalOverlappingAllocation(coalitions);
-		RuleCalculator.calculateCoalitionClightsAllocation(coalitions);
-		*/
-		
-		calculateCoalitionRuleAllocations(coalitions);
-		
-		List<CoalitionWithRankingDifference> ref = RankCalculator.rankingBasedOnReference(coalitions);
-		List<CoalitionWithRankingDifference> prop = RankCalculator.rankingBasedOnProportionalAllocation(coalitions);
-		List<CoalitionWithRankingDifference> cea = RankCalculator.rankingBasedOnCEAAllocation(coalitions);
-		List<CoalitionWithRankingDifference> cel = RankCalculator.rankingBasedOnCELAllocation(coalitions);
-		List<CoalitionWithRankingDifference> aprop = RankCalculator.rankingBasedOnAdjustedProportionalAllocation(coalitions);
-		List<CoalitionWithRankingDifference> shap = RankCalculator.rankingBasedOnShapleyAllocation(coalitions);
-		List<CoalitionWithRankingDifference> tal = RankCalculator.rankingBasedOnTalmudAllocation(coalitions);
-		List<CoalitionWithRankingDifference> mo = RankCalculator.rankingBasedOnMinimalOverlappingAllocation(coalitions);
-		List<CoalitionWithRankingDifference> cli = RankCalculator.rankingBasedOnClightsAllocation(coalitions);
-
-		
-		RankCalculator.compareRanks(prop, ref);
-		RankCalculator.compareRanks(cea, ref);
-		RankCalculator.compareRanks(cel, ref);
-		RankCalculator.compareRanks(aprop, ref);
-		RankCalculator.compareRanks(shap, ref);
-		RankCalculator.compareRanks(tal, ref);
-		RankCalculator.compareRanks(mo, ref);
-		RankCalculator.compareRanks(cli, ref);
-		
-		/*
-		for(Claimer entry : claimers)
-		{
-			System.out.println(entry.getId() + " prop: " + entry.getProportionalAllocation() + " CEA: " + entry.getCEAAllocation() + " CEL: "
-					+ entry.getCELAllocation() + " shap: " + entry.getShapleyValue());
-		}
-		
-		for(Coalition entry : coalitions)
-		{
-			System.out.println("coalition: " + entry.getId() + ", ref: " + entry.getReference() + ", prop. profit: " + 
-					entry.getProportionalAllocation() + ", CEA profit: " + entry.getCEAAllocation() 
-					+ ", CEL profit: " + entry.getCELAllocation() + ", Shapley profit: " + entry.getShapleyValueAllocation());
-		}
-		
-		for(Claimer cl : claimers)
-		{
-			System.out.println("MO  " + cl.getId() + " " + cl.getMinimalOverlappingAllocation());
-			
-			System.out.println("TALMUD  " + cl.getId() + " " + cl.getTalmudAllocation());
-			System.out.println("CEA  " + cl.getId() + " " + cl.getCEAAllocation());
-			System.out.println("CEL  " + cl.getId() + " " + cl.getCELAllocation());
-			
-		}
-		*/
-		print(claimers, coalitions);
-		for(CoalitionWithRankingDifference entry : ref)
-		{
-			System.out.println("REF   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank());
-		}
-		System.out.println("sum of REF ranking differences : " + sumRankingDifferences(ref));
-		
-		for(CoalitionWithRankingDifference entry : prop)
-		{
-			System.out.println("PROP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
-		}
-		System.out.println("sum of PROP ranking differences : " + sumRankingDifferences(prop));
-		
-		for(CoalitionWithRankingDifference entry : cea)
-		{
-			System.out.println("CEA   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
-		}
-		System.out.println("sum of CEA ranking differences : " + sumRankingDifferences(cea));
-		
-		for(CoalitionWithRankingDifference entry : cel)
-		{
-			System.out.println("CEL   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
-		}
-		System.out.println("sum of CEL ranking differences : " + sumRankingDifferences(cel));
-		
-		for(CoalitionWithRankingDifference entry : aprop)
-		{
-			System.out.println("APROP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
-		}
-		System.out.println("sum of APROP ranking differences : " + sumRankingDifferences(aprop));
-		
-		for(CoalitionWithRankingDifference entry : shap)
-		{
-			System.out.println("SHAP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
-		}	
-		System.out.println("sum of SHAP ranking differences : " + sumRankingDifferences(shap));
-		
-		for(CoalitionWithRankingDifference entry : tal)
-		{
-			System.out.println("TAL   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
-		}
-		System.out.println("sum of TAL ranking differences : " + sumRankingDifferences(tal));
-		
-		for(CoalitionWithRankingDifference entry : mo)
-		{
-			System.out.println("MO   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
-		}
-		System.out.println("sum of MO ranking differences : " + sumRankingDifferences(mo));
-		
-		for(CoalitionWithRankingDifference entry : cli)
-		{
-			System.out.println("CLI   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
-		}
-		System.out.println("sum of CLI ranking differences : " + sumRankingDifferences(cli));
 	}
 	
 	private static void print(List<Claimer> list1, List<Coalition> list2)
@@ -645,18 +542,6 @@ public class UserInterfaceFrame extends JFrame
 	    return min + (max - min) * r.nextDouble();
 	}
 	
-	private static void clearClaimer(Claimer claimer)
-	{
-		claimer.setAdjustedProportionalAllocation(0);
-		claimer.setCEAAllocation(0);
-		claimer.setCELAllocation(0);
-		claimer.setClightsAllocation(0);
-		claimer.setMinimalOverlappingAllocation(0);
-		claimer.setProportionalAllocation(0);
-		claimer.setShapleyValue(0);
-		claimer.setTalmudAllocation(0);
-	}
-	
 	// update the claims of every claimer in the coalition lists
 	private static void updateCoalitionClaimers(List<Coalition> coalitions, List<Claimer> claimers)
 	{
@@ -672,20 +557,26 @@ public class UserInterfaceFrame extends JFrame
 	
 	private void disableAllButtons()
 	{
-		estate.setEditable(false);
-		agentA.setEditable(false);
-		agentB.setEditable(false);
-		agentC.setEditable(false);
+		numberOfCreditors.setEditable(false);
 		runButton.setEnabled(false);		
 	}
 	
 	private void enableAllButtons()
 	{
-		estate.setEditable(true);
-		agentA.setEditable(true);
-		agentB.setEditable(true);
-		agentC.setEditable(true);
+		numberOfCreditors.setEditable(true);
 		runButton.setEnabled(true);		
 	}
+	
+	private static JButton createSimpleButton(String text) 
+	{
+		  JButton button = new JButton(text);
+		  button.setForeground(Color.BLACK);
+		  button.setBackground(Color.WHITE);
+		  Border line = new LineBorder(Color.BLACK);
+		  Border margin = new EmptyBorder(5, 15, 5, 15);
+		  Border compound = new CompoundBorder(line, margin);
+		  button.setBorder(compound);
+		  // button.setOpaque(false);
+		  return button;
+	}
 }
- 
