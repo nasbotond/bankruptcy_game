@@ -12,8 +12,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import javax.swing.JButton;
@@ -122,7 +124,7 @@ public class UserInterfaceFrame extends JFrame
 		
 		// numIterations display:
 		//
-		numIterations = new JLabel("iterations: " + iterations);
+		numIterations = new JLabel("iterations: " + 0);
 		numIterations.setHorizontalAlignment(JLabel.CENTER);
 		buttonsPanel.add(numIterations);
 		//		
@@ -173,7 +175,8 @@ public class UserInterfaceFrame extends JFrame
 		    	{
 		    		try
 		    		{
-		    			calculateExactVariance();
+		    			// calculateExactVariance();
+		    			calculateAverageSRD();
 		    			
 		    			// disableAllButtons();
 		    			// System.out.println("Averages will be displayed after stop is clicked...");
@@ -215,22 +218,32 @@ public class UserInterfaceFrame extends JFrame
 		    thread.start();		
 		}
 	}
-	/*
-	private void calculateAverageVariances()
+	
+	private void calculateAverageSRD()
 	{
-		double minClaim = Double.parseDouble(agentA.getText());
-		double maxClaim = Double.parseDouble(agentB.getText());
-		int numClaimers = Integer.parseInt(agentC.getText());
-		double estateInput = Double.parseDouble(estate.getText());
-		iterations = 1;
-		numIterations.setText("iterations: " + iterations);  // update iterations label in UI
+		final int numClaimers = Integer.parseInt(agentC.getText());
+		double estate;
+		int iterations = 1;
 		
+		List<CoalitionWithRankingDifference> ref;
+		List<CoalitionWithRankingDifference> prop;
+		List<CoalitionWithRankingDifference> cea;
+		List<CoalitionWithRankingDifference> cel;
+		List<CoalitionWithRankingDifference> aprop;
+		List<CoalitionWithRankingDifference> shap;
+		List<CoalitionWithRankingDifference> tal;
+		List<CoalitionWithRankingDifference> mo;
+		List<CoalitionWithRankingDifference> cli;
+		
+		Map<String, Double> averageSRD;		
+		
+		numIterations.setText("iterations: " + iterations);  // update iterations label in UI
 		
 		List<Claimer> claimers = new ArrayList<Claimer>(); // master list of claimers
 		
 		for(int i = 0; i < numClaimers; i++)
 		{
-			claimers.add(new Claimer((char)(97 + i), generateRandomClaim(minClaim, maxClaim)));
+			claimers.add(new Claimer((char)(97 + i), generateUniformRandom(0, 1000)));
 		}
 		
 		List<LinkedList<Claimer>> powerSet = new LinkedList<LinkedList<Claimer>>();
@@ -247,68 +260,135 @@ public class UserInterfaceFrame extends JFrame
 			coalitions.add(new Coalition(entry));
 		}
 		
-		RuleCalculator.proportionalRuleAllocation(estateInput, claimers);
-		RuleCalculator.CEARuleAllocation(estateInput, claimers);
-		RuleCalculator.CELRuleAllocation(estateInput, claimers);
+		estate = generateUniformRandom(RuleCalculator.sum(claimers, "claims")/2, RuleCalculator.sum(claimers, "claims"));
 		
+		System.out.println("estate: " + estate);
 		
-		RuleCalculator.calculateReference(estateInput, coalitions, claimers);
-		RuleCalculator.calculateProportionalVariance(coalitions, iterations);
-		RuleCalculator.calculateCEAVariance(coalitions, iterations);
-		RuleCalculator.calculateCELVariance(coalitions, iterations);
-		RuleCalculator.calculateShapleyVariance(claimers, coalitions, iterations);
+		calculateClaimerRuleAllocations(estate, claimers);
+		RuleCalculator.calculateReference(estate, coalitions, claimers);
+		RuleCalculator.calculateShapleyValues(claimers, coalitions);
+		calculateCoalitionRuleAllocations(coalitions);	
 		
-		// print(claimers, coalitions);
-		// printAverages(coalitions);
-		// System.out.println(coalitions);	
+		print(claimers, coalitions);
 		
-		// int stop = 10;
-		// while(stop > 0)
-		while(stop == false)
+		ref = RankCalculator.rankingBasedOnReference(coalitions);
+		prop = RankCalculator.rankingBasedOnProportionalAllocation(coalitions);
+		cea = RankCalculator.rankingBasedOnCEAAllocation(coalitions);
+		cel = RankCalculator.rankingBasedOnCELAllocation(coalitions);
+		aprop = RankCalculator.rankingBasedOnAdjustedProportionalAllocation(coalitions);
+		shap = RankCalculator.rankingBasedOnShapleyAllocation(coalitions);
+		tal = RankCalculator.rankingBasedOnTalmudAllocation(coalitions);
+		mo = RankCalculator.rankingBasedOnMinimalOverlappingAllocation(coalitions);
+		cli = RankCalculator.rankingBasedOnClightsAllocation(coalitions);
+
+		
+		RankCalculator.compareRanks(prop, ref);
+		RankCalculator.compareRanks(cea, ref);
+		RankCalculator.compareRanks(cel, ref);
+		RankCalculator.compareRanks(aprop, ref);
+		RankCalculator.compareRanks(shap, ref);
+		RankCalculator.compareRanks(tal, ref);
+		RankCalculator.compareRanks(mo, ref);
+		RankCalculator.compareRanks(cli, ref);
+		
+		averageSRD = new HashMap<String, Double>();
+		
+		averageSRD.put("prop", sumRankingDifferences(prop));
+		averageSRD.put("cea", sumRankingDifferences(cea));
+		averageSRD.put("cel", sumRankingDifferences(cel));
+		averageSRD.put("aprop", sumRankingDifferences(aprop));
+		averageSRD.put("shap", sumRankingDifferences(shap));
+		averageSRD.put("tal", sumRankingDifferences(tal));
+		averageSRD.put("mo", sumRankingDifferences(mo));
+		averageSRD.put("cli", sumRankingDifferences(cli));
+		
+		System.out.println("loop start");
+		
+		while(!stop)
 		{		
 			for(int i = 0; i < numClaimers; i++)
 			{
-				claimers.get(i).setClaim(generateRandomClaim(minClaim, maxClaim));
+				claimers.get(i).setClaim(generateUniformRandom(0, 1000));
+				// clearClaimer(claimers.get(i));
 			}
+
+			estate = generateUniformRandom(RuleCalculator.sum(claimers, "claims")/2.0, RuleCalculator.sum(claimers, "claims"));
+
+			iterations = iterations + 1;			
 			
-			if(RuleCalculator.sum(claimers, "claims") > estateInput)
+			updateCoalitionClaimers(coalitions, claimers);
+			
+			calculateClaimerRuleAllocations(estate, claimers);
+			RuleCalculator.calculateReference(estate, coalitions, claimers);
+			RuleCalculator.calculateShapleyValues(claimers, coalitions);
+			
+			calculateCoalitionRuleAllocations(coalitions);	
+			
+			// print(claimers, coalitions);
+			
+			ref = RankCalculator.rankingBasedOnReference(coalitions);
+			prop = RankCalculator.rankingBasedOnProportionalAllocation(coalitions);
+			cea = RankCalculator.rankingBasedOnCEAAllocation(coalitions);
+			cel = RankCalculator.rankingBasedOnCELAllocation(coalitions);
+			aprop = RankCalculator.rankingBasedOnAdjustedProportionalAllocation(coalitions);
+			shap = RankCalculator.rankingBasedOnShapleyAllocation(coalitions);
+			tal = RankCalculator.rankingBasedOnTalmudAllocation(coalitions);
+			mo = RankCalculator.rankingBasedOnMinimalOverlappingAllocation(coalitions);
+			cli = RankCalculator.rankingBasedOnClightsAllocation(coalitions);
+
+			
+			RankCalculator.compareRanks(prop, ref);
+			RankCalculator.compareRanks(cea, ref);
+			RankCalculator.compareRanks(cel, ref);
+			RankCalculator.compareRanks(aprop, ref);
+			RankCalculator.compareRanks(shap, ref);
+			RankCalculator.compareRanks(tal, ref);
+			RankCalculator.compareRanks(mo, ref);
+			RankCalculator.compareRanks(cli, ref);
+			
+			averageSRD.put("prop", averageSRD.get("prop").doubleValue() + (sumRankingDifferences(prop) - averageSRD.get("prop").doubleValue())/iterations);
+			averageSRD.put("cea", averageSRD.get("cea").doubleValue() + (sumRankingDifferences(cea) - averageSRD.get("cea").doubleValue())/iterations);
+			averageSRD.put("cel", averageSRD.get("cel").doubleValue() + (sumRankingDifferences(cel) - averageSRD.get("cel").doubleValue())/iterations);
+			averageSRD.put("aprop", averageSRD.get("aprop").doubleValue() + (sumRankingDifferences(aprop) - averageSRD.get("aprop").doubleValue())/iterations);
+			averageSRD.put("shap", averageSRD.get("shap").doubleValue() + (sumRankingDifferences(shap) - averageSRD.get("shap").doubleValue())/iterations);
+			averageSRD.put("tal", averageSRD.get("tal").doubleValue() + (sumRankingDifferences(tal) - averageSRD.get("tal").doubleValue())/iterations);
+			averageSRD.put("mo", averageSRD.get("mo").doubleValue() + (sumRankingDifferences(mo) - averageSRD.get("mo").doubleValue())/iterations);
+			averageSRD.put("cli", averageSRD.get("cli").doubleValue() + (sumRankingDifferences(cli) - averageSRD.get("cli").doubleValue())/iterations);
+			
+			
+			if(iterations % 10 == 0)
 			{
-				iterations++;
-				numIterations.setText("iterations: " + iterations);  // update iterations label in UI
-				
-				updateCoalitionClaimers(coalitions, claimers);
-				
-				RuleCalculator.proportionalRuleAllocation(estateInput, claimers);
-				RuleCalculator.CEARuleAllocation(estateInput, claimers);
-				RuleCalculator.CELRuleAllocation(estateInput, claimers);
-				
-				
-				RuleCalculator.calculateReference(estateInput, coalitions, claimers);
-				RuleCalculator.calculateProportionalVariance(coalitions, iterations);
-				RuleCalculator.calculateCEAVariance(coalitions, iterations);
-				RuleCalculator.calculateCELVariance(coalitions, iterations);
-				RuleCalculator.calculateShapleyVariance(claimers, coalitions, iterations);
-				
-				// System.out.println(stop);
-				// print(claimers, coalitions);
-				
-				if(iterations % 10 == 0)
+				for(Map.Entry<String, Double> entry : averageSRD.entrySet())
 				{
-					printAverages(coalitions, iterations);					
+					System.out.println(entry.getKey() + ": " + entry.getValue());
 				}
-				
-				// stop--;
 			}
+			/*
+			try 
+			{
+				Thread.sleep(50);
+			} 
+			catch (InterruptedException e) 
+			{
+				e.printStackTrace();
+			}
+			*/
+			numIterations.setText("iterations: " + iterations);  // update iterations label in UI
 		}
-		printAverages(coalitions, iterations);
+		
+		System.out.println("done.");
+		/*
+		for(Map.Entry<String, Double> entry : averageSRD.entrySet())
+		{
+			System.out.println(entry.getKey() + ": " + entry.getValue());
+		}
+		*/
 		enableAllButtons();
 		stop = false;
-		// print(claimers, coalitions);
 	}
-	*/
+	
 	private void calculateExactVariance()
 	{
-		int iterations = 1;
 		double estateInput = Double.parseDouble(estate.getText());
 		List<Claimer> claimers = new ArrayList<Claimer>();
 		
@@ -330,24 +410,21 @@ public class UserInterfaceFrame extends JFrame
 		{
 			coalitions.add(new Coalition(entry));
 		}
-		
+		calculateClaimerRuleAllocations(estateInput, claimers);
+		/*
 		RuleCalculator.proportionalRuleAllocation(estateInput, claimers);
 		RuleCalculator.CEARuleAllocation(estateInput, claimers);
 		RuleCalculator.CELRuleAllocation(estateInput, claimers);
 		RuleCalculator.adjustedProportionalAllocation(estateInput, claimers);
 		RuleCalculator.talmudRuleAllocation(estateInput, claimers);
 		RuleCalculator.clightsRuleAllocation(estateInput, claimers);
+		*/
 		RuleCalculator.calculateReference(estateInput, coalitions, claimers);
 		
 		RuleCalculator.calculateShapleyValues(claimers, coalitions); // needs to be after calculateReference() because it needs the reference values for calculation
-		RuleCalculator.minimalOverlappingRuleAllocation(estateInput, claimers);
-		/*
-		RuleCalculator.calculateProportionalVariance(coalitions, iterations);
-		RuleCalculator.calculateCEAVariance(coalitions, iterations);
-		RuleCalculator.calculateCELVariance(coalitions, iterations);
-		RuleCalculator.calculateShapleyVariance(claimers, coalitions, iterations);
-		*/
+		// RuleCalculator.minimalOverlappingRuleAllocation(estateInput, claimers);
 		
+		/*
 		RuleCalculator.calculateCoalitionProportionalAllocation(coalitions);
 		RuleCalculator.calculateCoalitionCEAAllocation(coalitions);
 		RuleCalculator.calculateCoalitionCELAllocation(coalitions);
@@ -356,6 +433,9 @@ public class UserInterfaceFrame extends JFrame
 		RuleCalculator.calculateCoalitionTalmudAllocation(coalitions);
 		RuleCalculator.calculateCoalitionMinimalOverlappingAllocation(coalitions);
 		RuleCalculator.calculateCoalitionClightsAllocation(coalitions);
+		*/
+		
+		calculateCoalitionRuleAllocations(coalitions);
 		
 		List<CoalitionWithRankingDifference> ref = RankCalculator.rankingBasedOnReference(coalitions);
 		List<CoalitionWithRankingDifference> prop = RankCalculator.rankingBasedOnProportionalAllocation(coalitions);
@@ -496,6 +576,29 @@ public class UserInterfaceFrame extends JFrame
 		return sum;
 	}
 	
+	private static void calculateClaimerRuleAllocations(double estate, List<Claimer> claimers)
+	{
+		RuleCalculator.proportionalRuleAllocation(estate, claimers);
+		RuleCalculator.CEARuleAllocation(estate, claimers);
+		RuleCalculator.CELRuleAllocation(estate, claimers);
+		RuleCalculator.adjustedProportionalAllocation(estate, claimers);
+		RuleCalculator.talmudRuleAllocation(estate, claimers);
+		RuleCalculator.clightsRuleAllocation(estate, claimers);
+		RuleCalculator.minimalOverlappingRuleAllocation(estate, claimers);
+	}
+	
+	private static void calculateCoalitionRuleAllocations(List<Coalition> coalitions)
+	{
+		RuleCalculator.calculateCoalitionProportionalAllocation(coalitions);
+		RuleCalculator.calculateCoalitionCEAAllocation(coalitions);
+		RuleCalculator.calculateCoalitionCELAllocation(coalitions);
+		RuleCalculator.calculateCoalitionAdjustedProportionalAllocation(coalitions);
+		RuleCalculator.calculateCoalitionShapleyAllocation(coalitions);
+		RuleCalculator.calculateCoalitionTalmudAllocation(coalitions);
+		RuleCalculator.calculateCoalitionMinimalOverlappingAllocation(coalitions);
+		RuleCalculator.calculateCoalitionClightsAllocation(coalitions);
+	}
+	
 	private static <T> List<List<T>> combination(List<T> values, int size)
 	{
 		if(size == 0)
@@ -530,7 +633,7 @@ public class UserInterfaceFrame extends JFrame
 	}
 	
 	
-	private static double generateRandomClaim(double min, double max)
+	private static double generateUniformRandom(double min, double max)
 	{
 		if (min >= max)
 		{
@@ -542,6 +645,17 @@ public class UserInterfaceFrame extends JFrame
 	    return min + (max - min) * r.nextDouble();
 	}
 	
+	private static void clearClaimer(Claimer claimer)
+	{
+		claimer.setAdjustedProportionalAllocation(0);
+		claimer.setCEAAllocation(0);
+		claimer.setCELAllocation(0);
+		claimer.setClightsAllocation(0);
+		claimer.setMinimalOverlappingAllocation(0);
+		claimer.setProportionalAllocation(0);
+		claimer.setShapleyValue(0);
+		claimer.setTalmudAllocation(0);
+	}
 	
 	// update the claims of every claimer in the coalition lists
 	private static void updateCoalitionClaimers(List<Coalition> coalitions, List<Claimer> claimers)
@@ -551,6 +665,7 @@ public class UserInterfaceFrame extends JFrame
 			for(Claimer claimer : coalition.getClaimers())
 			{
 				claimer.setClaim(claimers.get(claimers.indexOf(claimer)).getClaim());
+				// clearClaimer(claimer);
 			}
 		}
 	}

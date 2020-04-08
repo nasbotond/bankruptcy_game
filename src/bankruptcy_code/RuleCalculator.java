@@ -117,7 +117,7 @@ public class RuleCalculator
 		
 		double surplus = estate;
 		double equal = surplus/doneClaimers.size();
-		while(surplus > 0)
+		while(surplus > 0.00001)
 		{
 			for(Iterator<Claimer> iterator = doneClaimers.iterator(); iterator.hasNext();)
 			{
@@ -652,7 +652,7 @@ public class RuleCalculator
 	}
 	*/
 	// finds the sum of the Claims in a given coalition
-	private static double sum(List<Claimer> list, String identifier)
+	public static double sum(List<Claimer> list, String identifier)
 	{
 		double sumOfElements = 0;
 		
@@ -705,13 +705,13 @@ public class RuleCalculator
 				{
 					sumOfElements += element.getAdjustedProportionalAllocation();
 				}
-			break;
+				break;
 			case "cli":
 				for(Claimer element : list)
 				{
 					sumOfElements += element.getClightsAllocation();
 				}
-			break;
+				break;
 		}
 				
 		return sumOfElements;
@@ -723,21 +723,21 @@ public class RuleCalculator
 	{
 	     if (original.isEmpty()) 
 	     {
-	       List<List<E>> result = new ArrayList<>(); 
-	       result.add(new ArrayList<>()); 
-	       return result; 
+	    	 List<List<E>> result = new ArrayList<>(); 
+	    	 result.add(new ArrayList<>()); 
+	    	 return result; 
 	     }
 	     E firstElement = original.remove(0);
 	     List<List<E>> returnValue = new ArrayList<>();
 	     List<List<E>> permutations = generatePermutation(original);
 	     for (List<E> smallerPermutated : permutations) 
 	     {
-	       for (int index=0; index <= smallerPermutated.size(); index++) 
-	       {
-	         List<E> temp = new ArrayList<>(smallerPermutated);
-	         temp.add(index, firstElement);
-	         returnValue.add(temp);
-	       }
+	    	 for (int index=0; index <= smallerPermutated.size(); index++) 
+	    	 {
+	    		 List<E> temp = new ArrayList<>(smallerPermutated);
+	    		 temp.add(index, firstElement);
+	    		 returnValue.add(temp);
+	    	 }
 	     }
 	     return returnValue;
 	}

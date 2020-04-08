@@ -6,7 +6,8 @@ import java.util.List;
 
 import bankruptcy_code.RuleCalculator;
 
-public class Main {
+public class Main 
+{
 
 	public static void main(String[] args) 
 	{
