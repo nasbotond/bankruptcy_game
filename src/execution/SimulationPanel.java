@@ -40,7 +40,7 @@ import bankruptcy_code.RankCalculator;
 import bankruptcy_code.RuleCalculator;
 
 @SuppressWarnings("serial")
-public class SimulationUIFrame extends JFrame
+public class SimulationPanel extends JPanel
 {
 	private JTextField numberOfCreditors;
 	
@@ -70,12 +70,12 @@ public class SimulationUIFrame extends JFrame
 	private JLabel numIterations;
 	private boolean stop = false;	
 	
-	public SimulationUIFrame()
+	public SimulationPanel()
 	{
 		this.setLayout(new GridLayout());
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		// this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setBackground(Color.WHITE);
-		this.setTitle("BANKRUPTCY GAME");
+		// this.setTitle("BANKRUPTCY GAME");
 		
 		canvasPanel = new JPanel(new BorderLayout());
 		canvasPanel.setBackground(Color.WHITE);
@@ -187,9 +187,11 @@ public class SimulationUIFrame extends JFrame
 		this.add(canvasPanel);
 		
 		this.setPreferredSize(new Dimension(700, 600)); // 525, 750
+		/*
 		this.setResizable(false);
 		this.pack();
 		this.setLocationRelativeTo(null);
+		*/
 	}
 	
 	private class RunButtonActionListener implements ActionListener 
@@ -292,7 +294,8 @@ public class SimulationUIFrame extends JFrame
 			coalitions.add(new Coalition(entry));
 		}
 		
-		maximumDiffLabel.setText("Maximum: " + (coalitions.size() - 1)*((coalitions.size() - 1) / 2)); // TODO
+		// maximumDiffLabel.setText("Maximum: " + (coalitions.size() - 1)*((coalitions.size() - 1) / 2)); // TODO
+		maximumDiffLabel.setText("Maximum: " + (((coalitions.size()-1)*(coalitions.size() - 1)) / 2)); // TODO
 		
 		estate = generateUniformRandom(RuleCalculator.sum(claimers, "claims")/2, RuleCalculator.sum(claimers, "claims"));
 		

@@ -14,7 +14,8 @@ public class Main
 		
 		EventQueue.invokeLater(() -> {
 			// ExactUIFrame frame = new ExactUIFrame();
-			SimulationUIFrame frame1 = new SimulationUIFrame();
+			// SimulationUIFrame frame1 = new SimulationUIFrame();
+			MasterFrame frame1 = new MasterFrame();
 			// frame.setVisible(true);
 			frame1.setVisible(true);
 		});
