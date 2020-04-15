@@ -56,10 +56,19 @@ public class SimulationPanel extends JPanel
 	private JLabel moLabel;
 	private JLabel cliLabel;
 	
+	private JLabel estateLabel;
+	private JLabel estateFunctionLabel1;
+	private JLabel estateFunctionLabel2;
+	
+	private JTextField estateFunctionMin;
+	private JTextField estateFunctionMax;
+	
 	private JButton runButton;
 	private JButton stopButton;
 	
 	private JPanel canvasPanel;
+	private JPanel numCreditorsPanel;
+	private JPanel estatePanel;
 	private JPanel inputsPanel;
 	private JPanel buttonsPanel;
 	private JPanel averagesPanel;
@@ -97,6 +106,8 @@ public class SimulationPanel extends JPanel
 		buttonsPanel.add(stopButton);
 		
 		// inputs
+		inputsPanel = new JPanel(new BorderLayout());
+		inputsPanel.setBackground(Color.WHITE);
 		
 		numberOfCreditorsLabel = new JLabel("Number of Creditors: ");
 		numberOfCreditorsLabel.setFont(new Font("Serif", Font.PLAIN, 21));
@@ -104,11 +115,38 @@ public class SimulationPanel extends JPanel
 		numberOfCreditors = new JTextField(4);
 		numberOfCreditors.setFont(new Font("Serif", Font.PLAIN, 21));
 		
-		inputsPanel = new JPanel();
-		inputsPanel.setBackground(Color.WHITE);
+		numCreditorsPanel = new JPanel();
+		numCreditorsPanel.setBackground(Color.WHITE);
 		
-		inputsPanel.add(numberOfCreditorsLabel);
-		inputsPanel.add(numberOfCreditors);
+		numCreditorsPanel.add(numberOfCreditorsLabel);
+		numCreditorsPanel.add(numberOfCreditors);
+		
+		estateLabel = new JLabel("Estate: ");
+		estateLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+		
+		estateFunctionMin = new JTextField(4);
+		estateFunctionMin.setFont(new Font("Serif", Font.PLAIN, 21));
+		
+		estateFunctionLabel1 = new JLabel("*D =< estate =<");
+		estateFunctionLabel1.setFont(new Font("Serif", Font.PLAIN, 21));
+		
+		estateFunctionMax = new JTextField(4);
+		estateFunctionMax.setFont(new Font("Serif", Font.PLAIN, 21));
+		
+		estateFunctionLabel2 = new JLabel("*D, where D denotes the sum of claims");
+		estateFunctionLabel2.setFont(new Font("Serif", Font.PLAIN, 21));
+		
+		estatePanel = new JPanel();
+		estatePanel.setBackground(Color.WHITE);
+		estatePanel.setPreferredSize(new Dimension(700, 50));
+		estatePanel.add(estateLabel);
+		estatePanel.add(estateFunctionMin);
+		estatePanel.add(estateFunctionLabel1);
+		estatePanel.add(estateFunctionMax);
+		estatePanel.add(estateFunctionLabel2);
+		
+		inputsPanel.add(numCreditorsPanel, BorderLayout.NORTH);
+		inputsPanel.add(estatePanel, BorderLayout.CENTER);
 		
 		canvasPanel.add(inputsPanel, BorderLayout.NORTH);
 		canvasPanel.add(buttonsPanel, BorderLayout.CENTER);
@@ -199,30 +237,48 @@ public class SimulationPanel extends JPanel
 		@Override
 		public void actionPerformed(ActionEvent event)
 		{	
-			if(!numberOfCreditors.getText().isEmpty())
+			if(!numberOfCreditors.getText().isEmpty() && !estateFunctionMax.getText().isEmpty() && !estateFunctionMin.getText().isEmpty())
 			{
-				disableAllButtons();
-				Thread thread = new Thread(new Runnable()
-			    {
-			    	@Override
-			    	public void run()
-			    	{
-			    		try
-			    		{
-			    			calculateAverageSRD();	    					    							    			
-						}
-			    		catch(Exception exception)  // TODO?
-			    		{
-							exception.printStackTrace();
-						}
-			    	}
-			    });
-			    
-			    thread.start();
+				if(Double.parseDouble(estateFunctionMax.getText()) >= Double.parseDouble(estateFunctionMin.getText()))
+				{
+					disableAllButtons();
+					Thread thread = new Thread(new Runnable()
+				    {
+				    	@Override
+				    	public void run()
+				    	{
+				    		try
+				    		{
+				    			calculateAverageSRD();	    					    							    			
+							}
+				    		catch(Exception exception)  // TODO?
+				    		{
+								exception.printStackTrace();
+							}
+				    	}
+				    });
+				    
+				    thread.start();
+				}
+				else
+				{
+					JLabel label = new JLabel("Minimum must be less than or equal to maximum");
+					label.setFont(new Font("Serif", Font.PLAIN, 21));
+					JOptionPane.showMessageDialog(new JFrame(), label, "ERROR", JOptionPane.ERROR_MESSAGE);
+				}
+				
+			}
+			else if(numberOfCreditors.getText().isEmpty())
+			{
+				JLabel label = new JLabel("Please input number of creditors");
+				label.setFont(new Font("Serif", Font.PLAIN, 21));
+				JOptionPane.showMessageDialog(new JFrame(), label, "ERROR", JOptionPane.ERROR_MESSAGE);
 			}
 			else
 			{
-				JOptionPane.showMessageDialog(new JFrame(), "Please input number of creditors", "ERROR", JOptionPane.ERROR_MESSAGE);
+				JLabel label = new JLabel("Please input valid estate bounds");
+				label.setFont(new Font("Serif", Font.PLAIN, 21));
+				JOptionPane.showMessageDialog(new JFrame(), label, "ERROR", JOptionPane.ERROR_MESSAGE);
 			}
 		}
 		
@@ -297,7 +353,9 @@ public class SimulationPanel extends JPanel
 		// maximumDiffLabel.setText("Maximum: " + (coalitions.size() - 1)*((coalitions.size() - 1) / 2)); // TODO
 		maximumDiffLabel.setText("Maximum: " + (((coalitions.size()-1)*(coalitions.size() - 1)) / 2)); // TODO
 		
-		estate = generateUniformRandom(RuleCalculator.sum(claimers, "claims")/2, RuleCalculator.sum(claimers, "claims"));
+		// estate = generateUniformRandom(RuleCalculator.sum(claimers, "claims")/2, RuleCalculator.sum(claimers, "claims"));
+		estate = generateUniformRandom((RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMin.getText())),
+							(RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMax.getText())));
 		
 		// System.out.println("estate: " + estate);
 		
@@ -349,7 +407,9 @@ public class SimulationPanel extends JPanel
 				// clearClaimer(claimers.get(i));
 			}
 
-			estate = generateUniformRandom(RuleCalculator.sum(claimers, "claims")/2.0, RuleCalculator.sum(claimers, "claims"));
+			// estate = generateUniformRandom(RuleCalculator.sum(claimers, "claims")/2.0, RuleCalculator.sum(claimers, "claims"));
+			estate = generateUniformRandom((RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMin.getText())),
+					(RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMax.getText())));
 
 			iterations = iterations + 1;			
 			
@@ -535,7 +595,7 @@ public class SimulationPanel extends JPanel
 	
 	private static double generateUniformRandom(double min, double max)
 	{
-		if (min >= max)
+		if (min > max)
 		{
 	        throw new IllegalArgumentException("max must be greater than min");
 	    }
@@ -561,12 +621,16 @@ public class SimulationPanel extends JPanel
 	private void disableAllButtons()
 	{
 		numberOfCreditors.setEditable(false);
-		runButton.setEnabled(false);		
+		estateFunctionMin.setEditable(false);
+		estateFunctionMax.setEditable(false);
+		runButton.setEnabled(false);	
 	}
 	
 	private void enableAllButtons()
 	{
 		numberOfCreditors.setEditable(true);
+		estateFunctionMin.setEditable(true);
+		estateFunctionMax.setEditable(true);
 		runButton.setEnabled(true);		
 	}
 	
