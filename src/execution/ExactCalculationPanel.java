@@ -11,14 +11,8 @@ import java.awt.event.ActionListener;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -45,21 +39,9 @@ import exceptions.InvalidEstateException;
 public class ExactCalculationPanel extends JPanel 
 {
 	private JTextField estate;
-	/*
-	private JTextField agentA;
-	private JTextField agentB;
-	private JTextField agentC;
-	private JTextField agentD;
-	*/
 	
 	private JLabel estateLabel;
 	private JLabel comboLabel;
-	/*
-	private JLabel agentALabel;
-	private JLabel agentBLabel;
-	private JLabel agentCLabel;
-	private JLabel agentDLabel;
-	*/
 	
 	private JButton runButton;
 	
@@ -78,10 +60,7 @@ public class ExactCalculationPanel extends JPanel
 	public ExactCalculationPanel()
 	{
 		this.setLayout(new GridLayout());
-		/*
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.setTitle("BANKRUPTCY GAME");
-		*/
+
 		comboPanel = new JPanel();
 		comboPanel.setBackground(Color.WHITE);
 		Integer[] creditorNumber = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
@@ -143,40 +122,9 @@ public class ExactCalculationPanel extends JPanel
 				inputsPanel.repaint();
 			}
 		});
-		
-		/*
-		agentALabel = new JLabel("Agent A: ");
-		agentBLabel = new JLabel("Agent B: ");
-		agentCLabel = new JLabel("Agent C: ");
-		agentDLabel = new JLabel("Agent D: ");
-		*/
-		/*
-		estateLabel = new JLabel("Estate/Endowment: ");
-		agentALabel = new JLabel("Minimum Claim: ");
-		agentBLabel = new JLabel("Maximum Claim: ");
-		agentCLabel = new JLabel("Number of Agents: ");
-		// agentDLabel = new JLabel("Agent D: ");
-		*/
-		
-		/*
-		agentA = new JTextField(4);
-		agentB = new JTextField(4);
-		agentC = new JTextField(4);
-		agentD = new JTextField(4);	
-		
-		
-		inputsPanel.add(agentALabel);
-		inputsPanel.add(agentA);
-		inputsPanel.add(agentBLabel);
-		inputsPanel.add(agentB);
-		inputsPanel.add(agentCLabel);
-		inputsPanel.add(agentC);
-		inputsPanel.add(agentDLabel);
-		inputsPanel.add(agentD);
-		*/
+
 		canvasPanel.add(comboPanel, BorderLayout.NORTH);
 		canvasPanel.add(inputsPanel, BorderLayout.CENTER);
-		// canvasPanel.add(buttonsPanel, BorderLayout.SOUTH);
 		
 		// console panel:
 		//
@@ -200,17 +148,11 @@ public class ExactCalculationPanel extends JPanel
 		consolePanel.add(scrollPane, BorderLayout.CENTER);
 		//
 		
-		canvasPanel.add(consolePanel, BorderLayout.SOUTH);
-		
+		canvasPanel.add(consolePanel, BorderLayout.SOUTH);		
 		
 		this.add(canvasPanel);
 		
 		this.setPreferredSize(new Dimension(700, 675)); // 525, 750
-		/*
-		this.setResizable(false);
-		this.pack();
-		this.setLocationRelativeTo(null);
-		*/
 	}
 	
 	private class RunButtonActionListener implements ActionListener 
@@ -227,13 +169,7 @@ public class ExactCalculationPanel extends JPanel
 					{
 						try
 						{
-							calculateExactSRD();
-							//calculateAverageSRD();
-							
-							// disableAllButtons();
-							// System.out.println("Averages will be displayed after stop is clicked...");
-							// calculateAverageVariances();
-							
+							calculateExactSRD();							
 						}
 						catch(Exception exception)  // TODO?
 						{
@@ -251,6 +187,7 @@ public class ExactCalculationPanel extends JPanel
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void calculateExactSRD() throws InvalidEstateException
 	{
 		double estateInput = Double.parseDouble(estate.getText());
@@ -262,13 +199,6 @@ public class ExactCalculationPanel extends JPanel
 			sumOfClaims += Double.parseDouble(input.getText());
 			claimers.add(new Claimer((char)(97 + listOfCreditorInputs.indexOf(input)), Double.parseDouble(input.getText())));
 		}
-		
-		/*
-		claimers.add(new Claimer('a', Double.parseDouble(agentA.getText())));
-		claimers.add(new Claimer('b', Double.parseDouble(agentB.getText())));
-		claimers.add(new Claimer('c', Double.parseDouble(agentC.getText())));
-		claimers.add(new Claimer('d', Double.parseDouble(agentD.getText())));		
-		*/
 		
 		if(estateInput <= sumOfClaims)
 		{
@@ -315,32 +245,9 @@ public class ExactCalculationPanel extends JPanel
 			RankCalculator.compareRanks(cli, ref);
 			RankCalculator.compareRanks(eq, ref);
 			RankCalculator.compareRanks(unirand, ref);
-			
-			/*
-			for(Claimer entry : claimers)
-			{
-				System.out.println(entry.getId() + " prop: " + entry.getProportionalAllocation() + " CEA: " + entry.getCEAAllocation() + " CEL: "
-						+ entry.getCELAllocation() + " shap: " + entry.getShapleyValue());
-			}
-			
-			for(Coalition entry : coalitions)
-			{
-				System.out.println("coalition: " + entry.getId() + ", ref: " + entry.getReference() + ", prop. profit: " + 
-						entry.getProportionalAllocation() + ", CEA profit: " + entry.getCEAAllocation() 
-						+ ", CEL profit: " + entry.getCELAllocation() + ", Shapley profit: " + entry.getShapleyValueAllocation());
-			}
-			
-			for(Claimer cl : claimers)
-			{
-				System.out.println("MO  " + cl.getId() + " " + cl.getMinimalOverlappingAllocation());
-				
-				System.out.println("TALMUD  " + cl.getId() + " " + cl.getTalmudAllocation());
-				System.out.println("CEA  " + cl.getId() + " " + cl.getCEAAllocation());
-				System.out.println("CEL  " + cl.getId() + " " + cl.getCELAllocation());
-				
-			}
-			*/
+
 			print(claimers, coalitions);
+			
 			for(CoalitionWithRankingDifference entry : ref)
 			{
 				System.out.println("REF   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank());
@@ -479,7 +386,6 @@ public class ExactCalculationPanel extends JPanel
 		  Border margin = new EmptyBorder(5, 15, 5, 15);
 		  Border compound = new CompoundBorder(line, margin);
 		  button.setBorder(compound);
-		  // button.setOpaque(false);
 		  return button;
 	}
 }

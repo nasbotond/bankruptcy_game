@@ -9,24 +9,18 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
@@ -76,18 +70,13 @@ public class SimulationPanel extends JPanel
 	private JPanel buttonsPanel;
 	private JPanel averagesPanel;
 	
-	private JPanel consolePanel;
-	private JTextArea consoleOutput;
-	
 	private JLabel numIterations;
 	private boolean stop = false;	
 	
 	public SimulationPanel()
 	{
 		this.setLayout(new GridLayout());
-		// this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setBackground(Color.WHITE);
-		// this.setTitle("BANKRUPTCY GAME");
 		
 		canvasPanel = new JPanel(new BorderLayout());
 		canvasPanel.setBackground(Color.WHITE);
@@ -206,39 +195,10 @@ public class SimulationPanel extends JPanel
 		averagesPanel.add(unirandLabel);
 		
 		canvasPanel.add(averagesPanel, BorderLayout.SOUTH);
-		// console panel:
-		//
-		/*
-		consolePanel = new JPanel();
-		consolePanel.setBackground(Color.WHITE);
-						
-		consoleOutput = new JTextArea(33, 60);
-		consoleOutput.setEditable(false);
-		JScrollPane scrollPane = new JScrollPane(consoleOutput);		
-						
-		PrintStream printStream = new PrintStream(new CustomOutputStream(consoleOutput));
-					
-		// keeps reference of standard output stream
-		// standardOut = System.out;
-				         
-		// re-assigns standard output stream and error output stream
-		System.setOut(printStream);
-		System.setErr(printStream);
-						
-		consolePanel.add(scrollPane);
-		//
-		
-		canvasPanel.add(consolePanel, BorderLayout.SOUTH);
-		*/
 		
 		this.add(canvasPanel);
 		
 		this.setPreferredSize(new Dimension(700, 600)); // 525, 750
-		/*
-		this.setResizable(false);
-		this.pack();
-		this.setLocationRelativeTo(null);
-		*/
 	}
 	
 	private class RunButtonActionListener implements ActionListener 
@@ -318,6 +278,7 @@ public class SimulationPanel extends JPanel
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void calculateAverageSRD()
 	{
 		final int numClaimers = Integer.parseInt(numberOfCreditors.getText());
@@ -362,14 +323,10 @@ public class SimulationPanel extends JPanel
 		}
 		
 		double maximumSRD = (((coalitions.size()-1)*(coalitions.size() - 1)) / 2);
-		// maximumDiffLabel.setText("Maximum: " + (coalitions.size() - 1)*((coalitions.size() - 1) / 2)); // TODO
 		maximumDiffLabel.setText("Maximum: 1.0");
 		
-		// estate = generateUniformRandom(RuleCalculator.sum(claimers, "claims")/2, RuleCalculator.sum(claimers, "claims"));
 		estate = CustomMathOperations.generateUniformRandom((RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMin.getText())),
 							(RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMax.getText())));
-		
-		// System.out.println("estate: " + estate);
 		
 		calculateClaimerRuleAllocations(estate, claimers);
 		RuleCalculator.calculateReference(estate, coalitions, claimers);
@@ -389,8 +346,6 @@ public class SimulationPanel extends JPanel
 		cli = RankCalculator.rankingBasedOnClightsAllocation(coalitions);
 		eq = RankCalculator.rankingBasedOnEqualAllocation(coalitions);
 		unirand = RankCalculator.rankingBasedOnUniformRandomAllocation(coalitions);
-				
-
 		
 		RankCalculator.compareRanks(prop, ref);
 		RankCalculator.compareRanks(cea, ref);
@@ -416,14 +371,11 @@ public class SimulationPanel extends JPanel
 		averageSRD.put("eq", sumRankingDifferences(eq));
 		averageSRD.put("unirand", sumRankingDifferences(unirand));
 		
-		// System.out.println("loop start");
-		
 		while(!stop)
 		{		
 			for(int i = 0; i < numClaimers; i++)
 			{
 				claimers.get(i).setClaim(CustomMathOperations.generateUniformRandom(0, 1000));
-				// clearClaimer(claimers.get(i));
 			}
 
 			// estate = generateUniformRandom(RuleCalculator.sum(claimers, "claims")/2.0, RuleCalculator.sum(claimers, "claims"));
@@ -439,8 +391,6 @@ public class SimulationPanel extends JPanel
 			RuleCalculator.calculateShapleyValues(claimers, coalitions);
 			
 			calculateCoalitionRuleAllocations(coalitions);	
-			
-			// print(claimers, coalitions);
 			
 			ref = RankCalculator.rankingBasedOnReference(coalitions);
 			prop = RankCalculator.rankingBasedOnProportionalAllocation(coalitions);
@@ -481,50 +431,25 @@ public class SimulationPanel extends JPanel
 			if(iterations % 10 == 0)
 			{
 				propLabel.setText("Relative Average Proportional Rule SRD: " + averageSRD.get("prop")/maximumSRD);
-				// propLabel.setFont(new Font("Serif", Font.PLAIN, 21));
 				ceaLabel.setText("Relative Average CEA Rule SRD: " + averageSRD.get("cea")/maximumSRD);
-				// ceaLabel.setFont(new Font("Serif", Font.PLAIN, 21));
 				celLabel.setText("Relative Average CEL Rule SRD: " + averageSRD.get("cel")/maximumSRD);
-				// celLabel.setFont(new Font("Serif", Font.PLAIN, 21));
 				apropLabel.setText("Relative Average Adjusted Proportional Rule SRD: " + averageSRD.get("aprop")/maximumSRD);
-				// apropLabel.setFont(new Font("Serif", Font.PLAIN, 21));
 				shapLabel.setText("Relative Average Shapley Value SRD: " + averageSRD.get("shap")/maximumSRD);
-				// shapLabel.setFont(new Font("Serif", Font.PLAIN, 21));
 				talLabel.setText("Relative Average Talmud Rule SRD: " + averageSRD.get("tal")/maximumSRD);
-				// talLabel.setFont(new Font("Serif", Font.PLAIN, 21));
 				moLabel.setText("Relative Average Minimal Overlap Rule SRD: " + averageSRD.get("mo")/maximumSRD);
-				// moLabel.setFont(new Font("Serif", Font.PLAIN, 21));
-				cliLabel.setText("Relative Average Per Capita Nucleolous Rule SRD: " + averageSRD.get("cli")/maximumSRD);
-				
+				cliLabel.setText("Relative Average Per Capita Nucleolous Rule SRD: " + averageSRD.get("cli")/maximumSRD);				
 				eqLabel.setText("Control 1: Relative Average Equal Allocation SRD: " + averageSRD.get("eq")/maximumSRD);
 				unirandLabel.setText("Control 2: Relative Average Uniform Random Allocation SRD: " + averageSRD.get("unirand")/maximumSRD);
-				// cliLabel.setFont(new Font("Serif", Font.PLAIN, 21));
-				/*
-				for(Map.Entry<String, Double> entry : averageSRD.entrySet())
-				{
-					// System.out.println(entry.getKey() + ": " + entry.getValue());
-					
-				}
-				*/
 			}
-			/*
-			try 
-			{
-				Thread.sleep(50);
-			} 
-			catch (InterruptedException e) 
-			{
-				e.printStackTrace();
-			}
-			*/
+			
 			numIterations.setText("iterations: " + iterations);  // update iterations label in UI
 		}
-		
-		// System.out.println("done.");
+
 		enableAllButtons();
 		stop = false;
 	}
 	
+	@SuppressWarnings("unused")
 	private static void print(List<Claimer> list1, List<Coalition> list2)
 	{	
 		System.out.println("Claimers");
@@ -545,6 +470,7 @@ public class SimulationPanel extends JPanel
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	private static void printAverages(List<Coalition> list2, int iter)
 	{
 		System.out.println("iteration: " + iter);
@@ -629,7 +555,6 @@ public class SimulationPanel extends JPanel
 		  Border margin = new EmptyBorder(5, 15, 5, 15);
 		  Border compound = new CompoundBorder(line, margin);
 		  button.setBorder(compound);
-		  // button.setOpaque(false);
 		  return button;
 	}
 }
