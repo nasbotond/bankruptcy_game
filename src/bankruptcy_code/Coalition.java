@@ -15,6 +15,8 @@ public class Coalition
 	private double adjustedProportionalAllocation; // adjusted proportional rule allocation
 	private double minimalOverlappingAllocation; // MO allocation
 	private double clightsAllocation;
+	private double equalAllocation; // control rule #1, all get equal amounts
+	private double uniformRandomAllocation; // control rule #2
 	
 	private double averagePropVariation;
 	private double averageCEAVariation;
@@ -119,6 +121,26 @@ public class Coalition
 	public void setClightsAllocation(double clightsAllocation) 
 	{
 		this.clightsAllocation = clightsAllocation;
+	}
+	
+	public double getEqualAllocation() 
+	{
+		return equalAllocation;
+	}
+
+	public void setEqualAllocation(double equalAllocation) 
+	{
+		this.equalAllocation = equalAllocation;
+	}
+
+	public double getUniformRandomAllocation() 
+	{
+		return uniformRandomAllocation;
+	}
+
+	public void setUniformRandomAllocation(double uniformRandomAllocation) 
+	{
+		this.uniformRandomAllocation = uniformRandomAllocation;
 	}
 
 	public double getAveragePropVariation() 

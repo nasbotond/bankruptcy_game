@@ -17,7 +17,7 @@ public class RuleCalculator
 	public static double[] calculateShapleyValues(List<Claimer> claimers, List<Coalition> coalitions)
 	{
 		List<Claimer> claimersClone = new ArrayList<Claimer>(claimers);
-		List<List<Claimer>> permutations = generatePermutation(claimersClone);
+		List<List<Claimer>> permutations = CustomMathOperations.generatePermutation(claimersClone);
 		
 		double[] shapleys = new double[claimers.size()];
 		List<Claimer> currentCoalition = new ArrayList<Claimer>();
@@ -485,6 +485,37 @@ public class RuleCalculator
 		return max;
 	}
 	
+	public static void equalAllocation(double estate, List<Claimer> input)
+	{
+		for(Claimer claimer : input)
+		{
+			claimer.setEqualAllocation(estate/input.size());
+		}
+	}
+	
+	public static void uniformRandomAllocation(double estate, List<Claimer> input)
+	{
+		double sum = 0.0;
+		double[] randomDoubles = new double[input.size()];
+		for(int i = 0; i < randomDoubles.length; i++) 
+		{
+			double rand = CustomMathOperations.generateUniformRandom(0, 1);
+			randomDoubles[i] = rand;
+			sum += rand;
+		}
+		
+		double factor = 1/sum;
+		for(int i = 0; i < randomDoubles.length; i++)
+		{
+			randomDoubles[i] = randomDoubles[i]*factor;
+		}
+		
+		for(Claimer claimer : input)
+		{
+			claimer.setUniformRandomAllocation(estate*randomDoubles[input.indexOf(claimer)]);
+		}
+	}
+	
 	// v(s) function: used as reference point for SRD
 	public static void calculateReference(double estate, List<Coalition> coalitions, List<Claimer> allClaimers)
 	{
@@ -578,6 +609,27 @@ public class RuleCalculator
 			entry.setClightsAllocation(sumClaimers);
 		}
 	}
+	
+	public static void calculateCoalitionEqualAllocation(List<Coalition> coalitions)
+	{
+		for(Coalition entry : coalitions)
+		{
+			double sumClaimers = sum(entry.getClaimers(), "eq");
+			
+			entry.setEqualAllocation(sumClaimers);
+		}
+	}
+	
+	public static void calculateCoalitionUniformRandomAllocation(List<Coalition> coalitions)
+	{
+		for(Coalition entry : coalitions)
+		{
+			double sumClaimers = sum(entry.getClaimers(), "unirand");
+			
+			entry.setUniformRandomAllocation(sumClaimers);
+		}
+	}
+	
 	/*
 	// calculateReference must be called before this method to ensure we have the correct reference values
 	// calculates the profit (or surplus) each coalition earns with this rule
@@ -712,34 +764,21 @@ public class RuleCalculator
 					sumOfElements += element.getClightsAllocation();
 				}
 				break;
+			case "eq":
+				for(Claimer element : list)
+				{
+					sumOfElements += element.getEqualAllocation();
+				}
+				break;
+			case "unirand":
+				for(Claimer element : list)
+				{
+					sumOfElements += element.getUniformRandomAllocation();
+				}
+				break;
 		}
 				
 		return sumOfElements;
-	}
-	
-	
-	// generate all permutations of the input list
-	private static <E> List<List<E>> generatePermutation(List<E> original) 
-	{
-	     if (original.isEmpty()) 
-	     {
-	    	 List<List<E>> result = new ArrayList<>(); 
-	    	 result.add(new ArrayList<>()); 
-	    	 return result; 
-	     }
-	     E firstElement = original.remove(0);
-	     List<List<E>> returnValue = new ArrayList<>();
-	     List<List<E>> permutations = generatePermutation(original);
-	     for (List<E> smallerPermutated : permutations) 
-	     {
-	    	 for (int index=0; index <= smallerPermutated.size(); index++) 
-	    	 {
-	    		 List<E> temp = new ArrayList<>(smallerPermutated);
-	    		 temp.add(index, firstElement);
-	    		 returnValue.add(temp);
-	    	 }
-	     }
-	     return returnValue;
 	}
 		
 }

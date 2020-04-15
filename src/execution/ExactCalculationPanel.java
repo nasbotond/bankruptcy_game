@@ -36,6 +36,7 @@ import javax.swing.border.LineBorder;
 import bankruptcy_code.Claimer;
 import bankruptcy_code.Coalition;
 import bankruptcy_code.CoalitionWithRankingDifference;
+import bankruptcy_code.CustomMathOperations;
 import bankruptcy_code.RankCalculator;
 import bankruptcy_code.RuleCalculator;
 import exceptions.InvalidEstateException;
@@ -123,12 +124,15 @@ public class ExactCalculationPanel extends JPanel
 				estateLabel = new JLabel("Estate/Endowment:");
 				estateLabel.setFont(new Font("Serif", Font.PLAIN, 21));
 				estate = new JTextField(4);
+				estate.setFont(new Font("Serif", Font.PLAIN, 21));
 				inputsPanel.add(estateLabel);
 				inputsPanel.add(estate);
 				
 				for(int i = 0; i < numCreditorsCombo.getItemAt(numCreditorsCombo.getSelectedIndex()); i++)
 				{
-					listOfCreditorInputs.add(new JTextField(4));
+					JTextField textField = new JTextField(4);
+					textField.setFont(new Font("Serif", Font.PLAIN, 21));
+					listOfCreditorInputs.add(textField);
 					JLabel label = new JLabel((char)(97 + i) + ":");
 					label.setFont(new Font("Serif", Font.PLAIN, 21));
 					inputsPanel.add(label);
@@ -272,7 +276,7 @@ public class ExactCalculationPanel extends JPanel
 			
 			for(int i = 1; i <= claimers.size(); i++)
 			{
-				powerSet.addAll((Collection<? extends LinkedList<Claimer>>) combination(claimers, i));
+				powerSet.addAll((Collection<? extends LinkedList<Claimer>>) CustomMathOperations.combination(claimers, i));
 			}
 			
 			List<Coalition> coalitions = new ArrayList<Coalition>(); // master list of coalitions
@@ -297,6 +301,8 @@ public class ExactCalculationPanel extends JPanel
 			List<CoalitionWithRankingDifference> tal = RankCalculator.rankingBasedOnTalmudAllocation(coalitions);
 			List<CoalitionWithRankingDifference> mo = RankCalculator.rankingBasedOnMinimalOverlappingAllocation(coalitions);
 			List<CoalitionWithRankingDifference> cli = RankCalculator.rankingBasedOnClightsAllocation(coalitions);
+			List<CoalitionWithRankingDifference> eq = RankCalculator.rankingBasedOnEqualAllocation(coalitions);
+			List<CoalitionWithRankingDifference> unirand = RankCalculator.rankingBasedOnUniformRandomAllocation(coalitions);
 
 			
 			RankCalculator.compareRanks(prop, ref);
@@ -307,6 +313,8 @@ public class ExactCalculationPanel extends JPanel
 			RankCalculator.compareRanks(tal, ref);
 			RankCalculator.compareRanks(mo, ref);
 			RankCalculator.compareRanks(cli, ref);
+			RankCalculator.compareRanks(eq, ref);
+			RankCalculator.compareRanks(unirand, ref);
 			
 			/*
 			for(Claimer entry : claimers)
@@ -386,6 +394,18 @@ public class ExactCalculationPanel extends JPanel
 				System.out.println("CLI   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 			}
 			System.out.println("sum of CLI ranking differences : " + sumRankingDifferences(cli));
+			
+			for(CoalitionWithRankingDifference entry : eq)
+			{
+				System.out.println("EQ   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
+			}
+			System.out.println("sum of EQ ranking differences : " + sumRankingDifferences(eq));
+			
+			for(CoalitionWithRankingDifference entry : unirand)
+			{
+				System.out.println("UNIRAND   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
+			}
+			System.out.println("sum of UNIRAND ranking differences : " + sumRankingDifferences(unirand));
 		}
 		else
 		{
@@ -401,7 +421,7 @@ public class ExactCalculationPanel extends JPanel
 			System.out.println(entry.getId() + " PROP: " + entry.getProportionalAllocation() + " CEA: " + entry.getCEAAllocation()
 			+ " CEL: " + entry.getCELAllocation()  + " SHAP: " + entry.getShapleyValue()  + " TAL: " + entry.getTalmudAllocation()
 			+ " MO: " + entry.getMinimalOverlappingAllocation() + " APROP: " + entry.getAdjustedProportionalAllocation()
-			+ " CLI: " + entry.getClightsAllocation());
+			+ " CLI: " + entry.getClightsAllocation() + " EQ: " + entry.getEqualAllocation() + " UNIRAND: " + entry.getUniformRandomAllocation());
 		}	
 		System.out.println("Coalitions");
 		for(Coalition entry : list2)
@@ -409,7 +429,7 @@ public class ExactCalculationPanel extends JPanel
 			System.out.println(entry.getId() + " REF: " + entry.getReference() + " PROP: " + entry.getProportionalAllocation()
 			+ " CEA: " + entry.getCEAAllocation()+ " CEL: " + entry.getCELAllocation() + " SHAP: " + entry.getShapleyValueAllocation()
 			+ " TAL: " + entry.getTalmudAllocation() + " MO: " + entry.getMinimalOverlappingAllocation() + " APROP: " + entry.getAdjustedProportionalAllocation()
-			+ " CLI: " + entry.getClightsAllocation());
+			+ " CLI: " + entry.getClightsAllocation() + " EQ: " + entry.getEqualAllocation() + " UNIRAND: " + entry.getUniformRandomAllocation());
 		}
 	}
 	
@@ -432,6 +452,8 @@ public class ExactCalculationPanel extends JPanel
 		RuleCalculator.talmudRuleAllocation(estate, claimers);
 		RuleCalculator.clightsRuleAllocation(estate, claimers);
 		RuleCalculator.minimalOverlappingRuleAllocation(estate, claimers);
+		RuleCalculator.equalAllocation(estate, claimers);
+		RuleCalculator.uniformRandomAllocation(estate, claimers);
 	}
 	
 	private static void calculateCoalitionRuleAllocations(List<Coalition> coalitions)
@@ -444,39 +466,8 @@ public class ExactCalculationPanel extends JPanel
 		RuleCalculator.calculateCoalitionTalmudAllocation(coalitions);
 		RuleCalculator.calculateCoalitionMinimalOverlappingAllocation(coalitions);
 		RuleCalculator.calculateCoalitionClightsAllocation(coalitions);
-	}
-	
-	private static <T> List<List<T>> combination(List<T> values, int size)
-	{
-		if(size == 0)
-		{
-			return Collections.singletonList(Collections.<T> emptyList());
-		}
-		
-		if(values.isEmpty())
-		{
-			return Collections.emptyList();
-		}
-		
-		List<List<T>> combination = new LinkedList<List<T>>();
-		
-		T actual = values.iterator().next();
-		
-		List<T> subSet = new LinkedList<T>(values);		
-		subSet.remove(actual);
-		
-		List<List<T>> subSetCombination = combination(subSet, size - 1);
-		
-		for(List<T> set : subSetCombination)
-		{
-			List<T> newSet = new LinkedList<T>(set);
-			newSet.add(0, actual);
-			combination.add(newSet);
-		}
-		
-		combination.addAll(combination(subSet, size));
-		
-		return combination;
+		RuleCalculator.calculateCoalitionEqualAllocation(coalitions);
+		RuleCalculator.calculateCoalitionUniformRandomAllocation(coalitions);
 	}
 	
 	private static JButton createSimpleButton(String text) 

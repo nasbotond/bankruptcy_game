@@ -12,6 +12,8 @@ public class Claimer
 	private double adjustedProportionalAllocation; // adjusted proportional rule allocation
 	private double minimalOverlappingAllocation; // MO rule allocation
 	private double clightsAllocation; // per capita nucleolus (clight's rule)
+	private double equalAllocation; // control rule #1, all get equal amounts
+	private double uniformRandomAllocation; // control rule #2
 	
 	public double getClaim() 
 	{
@@ -106,6 +108,26 @@ public class Claimer
 	public void setClightsAllocation(double clightsAllocation) 
 	{
 		this.clightsAllocation = clightsAllocation;
+	}
+
+	public double getEqualAllocation() 
+	{
+		return equalAllocation;
+	}
+
+	public void setEqualAllocation(double equalAllocation) 
+	{
+		this.equalAllocation = equalAllocation;
+	}
+
+	public double getUniformRandomAllocation() 
+	{
+		return uniformRandomAllocation;
+	}
+
+	public void setUniformRandomAllocation(double uniformRandomAllocation) 
+	{
+		this.uniformRandomAllocation = uniformRandomAllocation;
 	}
 
 	public Claimer(char id, double claim)

@@ -36,6 +36,7 @@ import javax.swing.border.LineBorder;
 import bankruptcy_code.Claimer;
 import bankruptcy_code.Coalition;
 import bankruptcy_code.CoalitionWithRankingDifference;
+import bankruptcy_code.CustomMathOperations;
 import bankruptcy_code.RankCalculator;
 import bankruptcy_code.RuleCalculator;
 
@@ -55,6 +56,8 @@ public class SimulationPanel extends JPanel
 	private JLabel talLabel;
 	private JLabel moLabel;
 	private JLabel cliLabel;
+	private JLabel eqLabel;
+	private JLabel unirandLabel;
 	
 	private JLabel estateLabel;
 	private JLabel estateFunctionLabel1;
@@ -169,22 +172,26 @@ public class SimulationPanel extends JPanel
 		
 		maximumDiffLabel = new JLabel("Maximum: ");
 		maximumDiffLabel.setFont(new Font("Serif", Font.PLAIN, 21));
-		propLabel = new JLabel("Average Proportional Rule SRD: ");
+		propLabel = new JLabel("Relative Average Proportional Rule SRD: ");
 		propLabel.setFont(new Font("Serif", Font.PLAIN, 21));
-		ceaLabel = new JLabel("Average CEA Rule SRD: ");
+		ceaLabel = new JLabel("Relative Average CEA Rule SRD: ");
 		ceaLabel.setFont(new Font("Serif", Font.PLAIN, 21));
-		celLabel = new JLabel("Average CEL Rule SRD: ");
+		celLabel = new JLabel("Relative Average CEL Rule SRD: ");
 		celLabel.setFont(new Font("Serif", Font.PLAIN, 21));
-		apropLabel = new JLabel("Average Adjusted Proportional Rule SRD:");
+		apropLabel = new JLabel("Relative Average Adjusted Proportional Rule SRD:");
 		apropLabel.setFont(new Font("Serif", Font.PLAIN, 21));
-		shapLabel = new JLabel("Average Shapley Value SRD:");
+		shapLabel = new JLabel("Relative Average Shapley Value SRD:");
 		shapLabel.setFont(new Font("Serif", Font.PLAIN, 21));
-		talLabel = new JLabel("Average Talmud Rule SRD:");
+		talLabel = new JLabel("Relative Average Talmud Rule SRD:");
 		talLabel.setFont(new Font("Serif", Font.PLAIN, 21));
-		moLabel = new JLabel("Average Minimal Overlap Rule SRD:");
+		moLabel = new JLabel("Relative Average Minimal Overlap Rule SRD:");
 		moLabel.setFont(new Font("Serif", Font.PLAIN, 21));
-		cliLabel = new JLabel("Average Per Capita Nucleolous Rule SRD:");
+		cliLabel = new JLabel("Relative Average Per Capita Nucleolous Rule SRD:");
 		cliLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+		eqLabel = new JLabel("Control 1: Relative Average Equal Allocation SRD:");
+		eqLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+		unirandLabel = new JLabel("Control 2: Relative Average Uniform Random Allocation SRD:");
+		unirandLabel.setFont(new Font("Serif", Font.PLAIN, 21));
 		
 		averagesPanel.add(maximumDiffLabel);
 		averagesPanel.add(propLabel);
@@ -195,6 +202,8 @@ public class SimulationPanel extends JPanel
 		averagesPanel.add(talLabel);
 		averagesPanel.add(moLabel);
 		averagesPanel.add(cliLabel);
+		averagesPanel.add(eqLabel);
+		averagesPanel.add(unirandLabel);
 		
 		canvasPanel.add(averagesPanel, BorderLayout.SOUTH);
 		// console panel:
@@ -324,6 +333,8 @@ public class SimulationPanel extends JPanel
 		List<CoalitionWithRankingDifference> tal;
 		List<CoalitionWithRankingDifference> mo;
 		List<CoalitionWithRankingDifference> cli;
+		List<CoalitionWithRankingDifference> eq;
+		List<CoalitionWithRankingDifference> unirand;
 		
 		Map<String, Double> averageSRD;		
 		
@@ -333,14 +344,14 @@ public class SimulationPanel extends JPanel
 		
 		for(int i = 0; i < numClaimers; i++)
 		{
-			claimers.add(new Claimer((char)(97 + i), generateUniformRandom(0, 1000)));
+			claimers.add(new Claimer((char)(97 + i), CustomMathOperations.generateUniformRandom(0, 1000)));
 		}
 		
 		List<LinkedList<Claimer>> powerSet = new LinkedList<LinkedList<Claimer>>();
 		
 		for(int i = 1; i <= claimers.size(); i++)
 		{
-			powerSet.addAll((Collection<? extends LinkedList<Claimer>>) combination(claimers, i));
+			powerSet.addAll((Collection<? extends LinkedList<Claimer>>) CustomMathOperations.combination(claimers, i));
 		}
 		
 		List<Coalition> coalitions = new ArrayList<Coalition>(); // master list of coalitions
@@ -350,11 +361,12 @@ public class SimulationPanel extends JPanel
 			coalitions.add(new Coalition(entry));
 		}
 		
+		double maximumSRD = (((coalitions.size()-1)*(coalitions.size() - 1)) / 2);
 		// maximumDiffLabel.setText("Maximum: " + (coalitions.size() - 1)*((coalitions.size() - 1) / 2)); // TODO
-		maximumDiffLabel.setText("Maximum: " + (((coalitions.size()-1)*(coalitions.size() - 1)) / 2)); // TODO
+		maximumDiffLabel.setText("Maximum: 1.0");
 		
 		// estate = generateUniformRandom(RuleCalculator.sum(claimers, "claims")/2, RuleCalculator.sum(claimers, "claims"));
-		estate = generateUniformRandom((RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMin.getText())),
+		estate = CustomMathOperations.generateUniformRandom((RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMin.getText())),
 							(RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMax.getText())));
 		
 		// System.out.println("estate: " + estate);
@@ -375,6 +387,9 @@ public class SimulationPanel extends JPanel
 		tal = RankCalculator.rankingBasedOnTalmudAllocation(coalitions);
 		mo = RankCalculator.rankingBasedOnMinimalOverlappingAllocation(coalitions);
 		cli = RankCalculator.rankingBasedOnClightsAllocation(coalitions);
+		eq = RankCalculator.rankingBasedOnEqualAllocation(coalitions);
+		unirand = RankCalculator.rankingBasedOnUniformRandomAllocation(coalitions);
+				
 
 		
 		RankCalculator.compareRanks(prop, ref);
@@ -385,6 +400,8 @@ public class SimulationPanel extends JPanel
 		RankCalculator.compareRanks(tal, ref);
 		RankCalculator.compareRanks(mo, ref);
 		RankCalculator.compareRanks(cli, ref);
+		RankCalculator.compareRanks(eq, ref);
+		RankCalculator.compareRanks(unirand, ref);
 		
 		averageSRD = new HashMap<String, Double>();
 		
@@ -396,6 +413,8 @@ public class SimulationPanel extends JPanel
 		averageSRD.put("tal", sumRankingDifferences(tal));
 		averageSRD.put("mo", sumRankingDifferences(mo));
 		averageSRD.put("cli", sumRankingDifferences(cli));
+		averageSRD.put("eq", sumRankingDifferences(eq));
+		averageSRD.put("unirand", sumRankingDifferences(unirand));
 		
 		// System.out.println("loop start");
 		
@@ -403,12 +422,12 @@ public class SimulationPanel extends JPanel
 		{		
 			for(int i = 0; i < numClaimers; i++)
 			{
-				claimers.get(i).setClaim(generateUniformRandom(0, 1000));
+				claimers.get(i).setClaim(CustomMathOperations.generateUniformRandom(0, 1000));
 				// clearClaimer(claimers.get(i));
 			}
 
 			// estate = generateUniformRandom(RuleCalculator.sum(claimers, "claims")/2.0, RuleCalculator.sum(claimers, "claims"));
-			estate = generateUniformRandom((RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMin.getText())),
+			estate = CustomMathOperations.generateUniformRandom((RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMin.getText())),
 					(RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMax.getText())));
 
 			iterations = iterations + 1;			
@@ -432,6 +451,8 @@ public class SimulationPanel extends JPanel
 			tal = RankCalculator.rankingBasedOnTalmudAllocation(coalitions);
 			mo = RankCalculator.rankingBasedOnMinimalOverlappingAllocation(coalitions);
 			cli = RankCalculator.rankingBasedOnClightsAllocation(coalitions);
+			eq = RankCalculator.rankingBasedOnEqualAllocation(coalitions);
+			unirand = RankCalculator.rankingBasedOnUniformRandomAllocation(coalitions);
 
 			
 			RankCalculator.compareRanks(prop, ref);
@@ -442,6 +463,8 @@ public class SimulationPanel extends JPanel
 			RankCalculator.compareRanks(tal, ref);
 			RankCalculator.compareRanks(mo, ref);
 			RankCalculator.compareRanks(cli, ref);
+			RankCalculator.compareRanks(eq, ref);
+			RankCalculator.compareRanks(unirand, ref);
 			
 			averageSRD.put("prop", averageSRD.get("prop").doubleValue() + (sumRankingDifferences(prop) - averageSRD.get("prop").doubleValue())/iterations);
 			averageSRD.put("cea", averageSRD.get("cea").doubleValue() + (sumRankingDifferences(cea) - averageSRD.get("cea").doubleValue())/iterations);
@@ -451,25 +474,30 @@ public class SimulationPanel extends JPanel
 			averageSRD.put("tal", averageSRD.get("tal").doubleValue() + (sumRankingDifferences(tal) - averageSRD.get("tal").doubleValue())/iterations);
 			averageSRD.put("mo", averageSRD.get("mo").doubleValue() + (sumRankingDifferences(mo) - averageSRD.get("mo").doubleValue())/iterations);
 			averageSRD.put("cli", averageSRD.get("cli").doubleValue() + (sumRankingDifferences(cli) - averageSRD.get("cli").doubleValue())/iterations);
+			averageSRD.put("eq", averageSRD.get("eq").doubleValue() + (sumRankingDifferences(eq) - averageSRD.get("eq").doubleValue())/iterations);
+			averageSRD.put("unirand", averageSRD.get("unirand").doubleValue() + (sumRankingDifferences(unirand) - averageSRD.get("unirand").doubleValue())/iterations);
 			
 			
 			if(iterations % 10 == 0)
 			{
-				propLabel.setText("Average Proportional Rule SRD: " + averageSRD.get("prop"));
+				propLabel.setText("Relative Average Proportional Rule SRD: " + averageSRD.get("prop")/maximumSRD);
 				// propLabel.setFont(new Font("Serif", Font.PLAIN, 21));
-				ceaLabel.setText("Average CEA Rule SRD: " + averageSRD.get("cea"));
+				ceaLabel.setText("Relative Average CEA Rule SRD: " + averageSRD.get("cea")/maximumSRD);
 				// ceaLabel.setFont(new Font("Serif", Font.PLAIN, 21));
-				celLabel.setText("Average CEL Rule SRD: " + averageSRD.get("cel"));
+				celLabel.setText("Relative Average CEL Rule SRD: " + averageSRD.get("cel")/maximumSRD);
 				// celLabel.setFont(new Font("Serif", Font.PLAIN, 21));
-				apropLabel.setText("Average Adjusted Proportional Rule SRD: " + averageSRD.get("aprop"));
+				apropLabel.setText("Relative Average Adjusted Proportional Rule SRD: " + averageSRD.get("aprop")/maximumSRD);
 				// apropLabel.setFont(new Font("Serif", Font.PLAIN, 21));
-				shapLabel.setText("Average Shapley Value SRD: " + averageSRD.get("shap"));
+				shapLabel.setText("Relative Average Shapley Value SRD: " + averageSRD.get("shap")/maximumSRD);
 				// shapLabel.setFont(new Font("Serif", Font.PLAIN, 21));
-				talLabel.setText("Average Talmud Rule SRD: " + averageSRD.get("tal"));
+				talLabel.setText("Relative Average Talmud Rule SRD: " + averageSRD.get("tal")/maximumSRD);
 				// talLabel.setFont(new Font("Serif", Font.PLAIN, 21));
-				moLabel.setText("Average Minimal Overlap Rule SRD: " + averageSRD.get("mo"));
+				moLabel.setText("Relative Average Minimal Overlap Rule SRD: " + averageSRD.get("mo")/maximumSRD);
 				// moLabel.setFont(new Font("Serif", Font.PLAIN, 21));
-				cliLabel.setText("Average Per Capita Nucleolous Rule SRD: " + averageSRD.get("cli"));
+				cliLabel.setText("Relative Average Per Capita Nucleolous Rule SRD: " + averageSRD.get("cli")/maximumSRD);
+				
+				eqLabel.setText("Control 1: Relative Average Equal Allocation SRD: " + averageSRD.get("eq")/maximumSRD);
+				unirandLabel.setText("Control 2: Relative Average Uniform Random Allocation SRD: " + averageSRD.get("unirand")/maximumSRD);
 				// cliLabel.setFont(new Font("Serif", Font.PLAIN, 21));
 				/*
 				for(Map.Entry<String, Double> entry : averageSRD.entrySet())
@@ -545,6 +573,8 @@ public class SimulationPanel extends JPanel
 		RuleCalculator.talmudRuleAllocation(estate, claimers);
 		RuleCalculator.clightsRuleAllocation(estate, claimers);
 		RuleCalculator.minimalOverlappingRuleAllocation(estate, claimers);
+		RuleCalculator.equalAllocation(estate, claimers);
+		RuleCalculator.uniformRandomAllocation(estate, claimers);
 	}
 	
 	private static void calculateCoalitionRuleAllocations(List<Coalition> coalitions)
@@ -557,52 +587,8 @@ public class SimulationPanel extends JPanel
 		RuleCalculator.calculateCoalitionTalmudAllocation(coalitions);
 		RuleCalculator.calculateCoalitionMinimalOverlappingAllocation(coalitions);
 		RuleCalculator.calculateCoalitionClightsAllocation(coalitions);
-	}
-	
-	private static <T> List<List<T>> combination(List<T> values, int size)
-	{
-		if(size == 0)
-		{
-			return Collections.singletonList(Collections.<T> emptyList());
-		}
-		
-		if(values.isEmpty())
-		{
-			return Collections.emptyList();
-		}
-		
-		List<List<T>> combination = new LinkedList<List<T>>();
-		
-		T actual = values.iterator().next();
-		
-		List<T> subSet = new LinkedList<T>(values);		
-		subSet.remove(actual);
-		
-		List<List<T>> subSetCombination = combination(subSet, size - 1);
-		
-		for(List<T> set : subSetCombination)
-		{
-			List<T> newSet = new LinkedList<T>(set);
-			newSet.add(0, actual);
-			combination.add(newSet);
-		}
-		
-		combination.addAll(combination(subSet, size));
-		
-		return combination;
-	}
-	
-	
-	private static double generateUniformRandom(double min, double max)
-	{
-		if (min > max)
-		{
-	        throw new IllegalArgumentException("max must be greater than min");
-	    }
-		
-	    Random r = new Random();
-	    
-	    return min + (max - min) * r.nextDouble();
+		RuleCalculator.calculateCoalitionEqualAllocation(coalitions);
+		RuleCalculator.calculateCoalitionUniformRandomAllocation(coalitions);
 	}
 	
 	// update the claims of every claimer in the coalition lists
