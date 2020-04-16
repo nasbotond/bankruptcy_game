@@ -8,7 +8,11 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -57,8 +61,11 @@ public class ExactCalculationPanel extends JPanel
 	private JPanel consolePanel;
 	private JTextArea consoleOutput;
 	
-	public ExactCalculationPanel()
-	{
+	private boolean isVersionB = false;
+	
+	public ExactCalculationPanel(boolean isVersionB)
+	{		
+		this.isVersionB = isVersionB;
 		this.setLayout(new GridLayout());
 
 		comboPanel = new JPanel();
@@ -133,8 +140,22 @@ public class ExactCalculationPanel extends JPanel
 		consolePanel.setBackground(Color.WHITE);						
 		consoleOutput = new JTextArea(30, 60);
 		consoleOutput.setEditable(false);
-		JScrollPane scrollPane = new JScrollPane(consoleOutput);		
-						
+		JScrollPane scrollPane = new JScrollPane(consoleOutput);	
+		
+		PrintStream out = null;
+		try 
+		{
+			out = new PrintStream(new FileOutputStream("output.txt", false), false);
+		} 
+		catch (FileNotFoundException e1) 
+		{
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		System.setOut(out);
+		System.setErr(out);
+			
+		/*
 		PrintStream printStream = new PrintStream(new CustomOutputStream(consoleOutput));
 					
 		// keeps reference of standard output stream
@@ -143,6 +164,7 @@ public class ExactCalculationPanel extends JPanel
 		// re-assigns standard output stream and error output stream
 		System.setOut(printStream);
 		System.setErr(printStream);
+		*/
 						
 		consolePanel.add(buttonsPanel, BorderLayout.NORTH);
 		consolePanel.add(scrollPane, BorderLayout.CENTER);
@@ -162,33 +184,53 @@ public class ExactCalculationPanel extends JPanel
 		{	
 			if(!listOfCreditorInputs.isEmpty())
 			{
-				Thread thread = new Thread(new Runnable()
+				double sumOfClaims = 0.0;
+				for(JTextField input : listOfCreditorInputs)
 				{
-					@Override
-					public void run()
+					sumOfClaims += Double.parseDouble(input.getText());					
+				}
+				if(sumOfClaims >= Double.parseDouble(estate.getText()))
+				{
+					Thread thread = new Thread(new Runnable()
 					{
-						try
+						@Override
+						public void run()
 						{
-							calculateExactSRD();							
+							try
+							{
+								PrintWriter pw = new PrintWriter("output.txt");
+								pw.close();
+								calculateExactSRD(isVersionB);
+								FileReader reader = new FileReader("output.txt");
+								consoleOutput.read(reader, "output.txt"); // Object of JTextArea
+							}
+							catch(Exception exception)  // TODO?
+							{
+								exception.printStackTrace();
+							}
 						}
-						catch(Exception exception)  // TODO?
-						{
-							exception.printStackTrace();
-						}
-					}
-				});
-				
-				thread.start();						
+					});
+					
+					thread.start();
+				}
+				else
+				{
+					JLabel label = new JLabel("Sum of claims must be greater than or equal to the estate");
+					label.setFont(new Font("Serif", Font.PLAIN, 21));
+					JOptionPane.showMessageDialog(new JFrame(), label, "ERROR", JOptionPane.ERROR_MESSAGE);
+				}										
 			}
 			else
 			{
-				JOptionPane.showMessageDialog(new JFrame(), "Number of creditors must be greater than 0", "ERROR", JOptionPane.ERROR_MESSAGE);
+				JLabel label = new JLabel("Number of creditors must be greater than 0");
+				label.setFont(new Font("Serif", Font.PLAIN, 21));
+				JOptionPane.showMessageDialog(new JFrame(), label, "ERROR", JOptionPane.ERROR_MESSAGE);
 			}
 		}
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void calculateExactSRD() throws InvalidEstateException
+	private void calculateExactSRD(boolean isVersionB) throws InvalidEstateException
 	{
 		double estateInput = Double.parseDouble(estate.getText());
 		List<Claimer> claimers = new ArrayList<Claimer>();
@@ -217,10 +259,10 @@ public class ExactCalculationPanel extends JPanel
 			}
 			
 			calculateClaimerRuleAllocations(estateInput, claimers);
-			RuleCalculator.calculateReference(estateInput, coalitions, claimers);		
+			RuleCalculator.calculateReference(estateInput, coalitions, claimers, isVersionB);		
 			RuleCalculator.calculateShapleyValues(claimers, coalitions); // needs to be after calculateReference() because it needs the reference values for calculation	
 			
-			calculateCoalitionRuleAllocations(coalitions);
+			calculateCoalitionRuleAllocations(coalitions, isVersionB);
 			
 			List<CoalitionWithRankingDifference> ref = RankCalculator.rankingBasedOnReference(coalitions);
 			List<CoalitionWithRankingDifference> prop = RankCalculator.rankingBasedOnProportionalAllocation(coalitions);
@@ -245,7 +287,16 @@ public class ExactCalculationPanel extends JPanel
 			RankCalculator.compareRanks(cli, ref);
 			RankCalculator.compareRanks(eq, ref);
 			RankCalculator.compareRanks(unirand, ref);
-
+			
+			if(isVersionB)
+			{
+				System.out.println("VERSION B");
+			}
+			else
+			{
+				System.out.println("VERSION A");
+			}
+			
 			print(claimers, coalitions);
 			
 			for(CoalitionWithRankingDifference entry : ref)
@@ -363,18 +414,18 @@ public class ExactCalculationPanel extends JPanel
 		RuleCalculator.uniformRandomAllocation(estate, claimers);
 	}
 	
-	private static void calculateCoalitionRuleAllocations(List<Coalition> coalitions)
+	private static void calculateCoalitionRuleAllocations(List<Coalition> coalitions, boolean isVersionB)
 	{
-		RuleCalculator.calculateCoalitionProportionalAllocation(coalitions);
-		RuleCalculator.calculateCoalitionCEAAllocation(coalitions);
-		RuleCalculator.calculateCoalitionCELAllocation(coalitions);
-		RuleCalculator.calculateCoalitionAdjustedProportionalAllocation(coalitions);
-		RuleCalculator.calculateCoalitionShapleyAllocation(coalitions);
-		RuleCalculator.calculateCoalitionTalmudAllocation(coalitions);
-		RuleCalculator.calculateCoalitionMinimalOverlappingAllocation(coalitions);
-		RuleCalculator.calculateCoalitionClightsAllocation(coalitions);
-		RuleCalculator.calculateCoalitionEqualAllocation(coalitions);
-		RuleCalculator.calculateCoalitionUniformRandomAllocation(coalitions);
+		RuleCalculator.calculateCoalitionProportionalAllocation(coalitions, isVersionB);
+		RuleCalculator.calculateCoalitionCEAAllocation(coalitions, isVersionB);
+		RuleCalculator.calculateCoalitionCELAllocation(coalitions, isVersionB);
+		RuleCalculator.calculateCoalitionAdjustedProportionalAllocation(coalitions, isVersionB);
+		RuleCalculator.calculateCoalitionShapleyAllocation(coalitions, isVersionB);
+		RuleCalculator.calculateCoalitionTalmudAllocation(coalitions, isVersionB);
+		RuleCalculator.calculateCoalitionMinimalOverlappingAllocation(coalitions, isVersionB);
+		RuleCalculator.calculateCoalitionClightsAllocation(coalitions, isVersionB);
+		RuleCalculator.calculateCoalitionEqualAllocation(coalitions, isVersionB);
+		RuleCalculator.calculateCoalitionUniformRandomAllocation(coalitions, isVersionB);
 	}
 	
 	private static JButton createSimpleButton(String text) 

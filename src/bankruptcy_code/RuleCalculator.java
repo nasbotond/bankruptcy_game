@@ -517,7 +517,7 @@ public class RuleCalculator
 	}
 	
 	// v(s) function: used as reference point for SRD
-	public static void calculateReference(double estate, List<Coalition> coalitions, List<Claimer> allClaimers)
+	public static void calculateReference(double estate, List<Coalition> coalitions, List<Claimer> allClaimers, boolean isVersionB)
 	{
 		double sumOfAllClaims = sum(allClaimers, "claims");
 		
@@ -526,107 +526,183 @@ public class RuleCalculator
 			double sumCurrentCoalition = sum(entry.getClaimers(), "claims");			
 			
 			double maxUpperBound = estate - (sumOfAllClaims - sumCurrentCoalition);
-			entry.setReference(Math.max(0, maxUpperBound));
+			if(isVersionB)
+			{
+				entry.setReference(Math.max(0, maxUpperBound)/entry.getClaimers().size());
+			}
+			else
+			{
+				entry.setReference(Math.max(0, maxUpperBound));
+			}			
 		}
 	}
 	
-	public static void calculateCoalitionProportionalAllocation(List<Coalition> coalitions)
+	public static void calculateCoalitionProportionalAllocation(List<Coalition> coalitions, boolean isVersionB)
 	{
 		for(Coalition entry : coalitions)
 		{
 			double sumClaimers = sum(entry.getClaimers(), "prop");
-			
-			entry.setProportionalAllocation(sumClaimers);
+			if(isVersionB)
+			{
+				entry.setProportionalAllocation(sumClaimers/(entry.getClaimers().size()));
+			}
+			else
+			{
+				entry.setProportionalAllocation(sumClaimers);
+			}
 		}
 	}
 	
-	public static void calculateCoalitionCEAAllocation(List<Coalition> coalitions)
+	public static void calculateCoalitionCEAAllocation(List<Coalition> coalitions, boolean isVersionB)
 	{
 		for(Coalition entry : coalitions)
 		{
 			double sumClaimers = sum(entry.getClaimers(), "CEA");
 			
-			entry.setCEAAllocation(sumClaimers);
+			if(isVersionB)
+			{
+				entry.setCEAAllocation(sumClaimers/entry.getClaimers().size());
+			}
+			else
+			{
+				entry.setCEAAllocation(sumClaimers);
+			}
 		}
 	}
 	
-	public static void calculateCoalitionCELAllocation(List<Coalition> coalitions)
+	public static void calculateCoalitionCELAllocation(List<Coalition> coalitions, boolean isVersionB)
 	{
 		for(Coalition entry : coalitions)
 		{
 			double sumClaimers = sum(entry.getClaimers(), "CEL");
 			
-			entry.setCELAllocation(sumClaimers);
+			if(isVersionB)
+			{
+				entry.setCELAllocation(sumClaimers/entry.getClaimers().size());	
+			}
+			else
+			{
+				entry.setCELAllocation(sumClaimers);
+			}
 		}
 	}
 	
-	public static void calculateCoalitionAdjustedProportionalAllocation(List<Coalition> coalitions)
+	public static void calculateCoalitionAdjustedProportionalAllocation(List<Coalition> coalitions, boolean isVersionB)
 	{
 		for(Coalition entry : coalitions)
 		{
 			double sumClaimers = sum(entry.getClaimers(), "aprop");
 			
-			entry.setAdjustedProportionalAllocation(sumClaimers);
+			if(isVersionB)
+			{
+				entry.setAdjustedProportionalAllocation(sumClaimers/entry.getClaimers().size());
+			}
+			else
+			{
+				entry.setAdjustedProportionalAllocation(sumClaimers);
+			}
 		}
 	}
 	
-	public static void calculateCoalitionShapleyAllocation(List<Coalition> coalitions)
+	public static void calculateCoalitionShapleyAllocation(List<Coalition> coalitions, boolean isVersionB)
 	{
 		for(Coalition entry : coalitions)
 		{
 			double sumClaimers = sum(entry.getClaimers(), "shap");
 			
-			entry.setShapleyValueAllocation(sumClaimers);
+			if(isVersionB)
+			{
+				entry.setShapleyValueAllocation(sumClaimers/entry.getClaimers().size());
+			}
+			else
+			{
+				entry.setShapleyValueAllocation(sumClaimers);
+			}
 		}
 	}
 	
-	public static void calculateCoalitionTalmudAllocation(List<Coalition> coalitions)
+	public static void calculateCoalitionTalmudAllocation(List<Coalition> coalitions, boolean isVersionB)
 	{
 		for(Coalition entry : coalitions)
 		{
 			double sumClaimers = sum(entry.getClaimers(), "talmud");
 			
-			entry.setTalmudAllocation(sumClaimers);
+			if(isVersionB)
+			{
+				entry.setTalmudAllocation(sumClaimers/entry.getClaimers().size());
+			}
+			else
+			{
+				entry.setTalmudAllocation(sumClaimers);
+			}
 		}
 	}
 	
-	public static void calculateCoalitionMinimalOverlappingAllocation(List<Coalition> coalitions)
+	public static void calculateCoalitionMinimalOverlappingAllocation(List<Coalition> coalitions, boolean isVersionB)
 	{
 		for(Coalition entry : coalitions)
 		{
 			double sumClaimers = sum(entry.getClaimers(), "MO");
 			
-			entry.setMinimalOverlappingAllocation(sumClaimers);
+			if(isVersionB)
+			{
+				entry.setMinimalOverlappingAllocation(sumClaimers/entry.getClaimers().size());
+			}
+			else
+			{
+				entry.setMinimalOverlappingAllocation(sumClaimers);
+			}
 		}
 	}
 	
-	public static void calculateCoalitionClightsAllocation(List<Coalition> coalitions)
+	public static void calculateCoalitionClightsAllocation(List<Coalition> coalitions, boolean isVersionB)
 	{
 		for(Coalition entry : coalitions)
 		{
 			double sumClaimers = sum(entry.getClaimers(), "cli");
 			
-			entry.setClightsAllocation(sumClaimers);
+			if(isVersionB)
+			{
+				entry.setClightsAllocation(sumClaimers/entry.getClaimers().size());
+			}
+			else
+			{
+				entry.setClightsAllocation(sumClaimers);
+			}
 		}
 	}
 	
-	public static void calculateCoalitionEqualAllocation(List<Coalition> coalitions)
+	public static void calculateCoalitionEqualAllocation(List<Coalition> coalitions, boolean isVersionB)
 	{
 		for(Coalition entry : coalitions)
 		{
 			double sumClaimers = sum(entry.getClaimers(), "eq");
 			
-			entry.setEqualAllocation(sumClaimers);
+			if(isVersionB)
+			{
+				entry.setEqualAllocation(sumClaimers/entry.getClaimers().size());
+			}
+			else
+			{
+				entry.setEqualAllocation(sumClaimers);
+			}
 		}
 	}
 	
-	public static void calculateCoalitionUniformRandomAllocation(List<Coalition> coalitions)
+	public static void calculateCoalitionUniformRandomAllocation(List<Coalition> coalitions, boolean isVersionB)
 	{
 		for(Coalition entry : coalitions)
 		{
 			double sumClaimers = sum(entry.getClaimers(), "unirand");
 			
-			entry.setUniformRandomAllocation(sumClaimers);
+			if(isVersionB)
+			{
+				entry.setUniformRandomAllocation(sumClaimers/entry.getClaimers().size());
+			}
+			else			
+			{
+				entry.setUniformRandomAllocation(sumClaimers);
+			}
 		}
 	}
 

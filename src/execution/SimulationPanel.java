@@ -71,10 +71,12 @@ public class SimulationPanel extends JPanel
 	private JPanel averagesPanel;
 	
 	private JLabel numIterations;
-	private boolean stop = false;	
+	private boolean stop = false;
+	private boolean isVersionB = false;
 	
-	public SimulationPanel()
+	public SimulationPanel(boolean isVersionB)
 	{
+		this.isVersionB = isVersionB;
 		this.setLayout(new GridLayout());
 		this.setBackground(Color.WHITE);
 		
@@ -119,7 +121,7 @@ public class SimulationPanel extends JPanel
 		estateFunctionMin = new JTextField(4);
 		estateFunctionMin.setFont(new Font("Serif", Font.PLAIN, 21));
 		
-		estateFunctionLabel1 = new JLabel("*D =< estate =<");
+		estateFunctionLabel1 = new JLabel("*D <= estate <=");
 		estateFunctionLabel1.setFont(new Font("Serif", Font.PLAIN, 21));
 		
 		estateFunctionMax = new JTextField(4);
@@ -218,7 +220,7 @@ public class SimulationPanel extends JPanel
 				    	{
 				    		try
 				    		{
-				    			calculateAverageSRD();	    					    							    			
+				    			calculateAverageSRD(isVersionB);	    					    							    			
 							}
 				    		catch(Exception exception)  // TODO?
 				    		{
@@ -277,9 +279,9 @@ public class SimulationPanel extends JPanel
 		    thread.start();		
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	private void calculateAverageSRD()
+	private void calculateAverageSRD(boolean isVersionB)
 	{
 		final int numClaimers = Integer.parseInt(numberOfCreditors.getText());
 		double estate;
@@ -329,9 +331,9 @@ public class SimulationPanel extends JPanel
 							(RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMax.getText())));
 		
 		calculateClaimerRuleAllocations(estate, claimers);
-		RuleCalculator.calculateReference(estate, coalitions, claimers);
+		RuleCalculator.calculateReference(estate, coalitions, claimers, isVersionB);
 		RuleCalculator.calculateShapleyValues(claimers, coalitions);
-		calculateCoalitionRuleAllocations(coalitions);	
+		calculateCoalitionRuleAllocations(coalitions, isVersionB);	
 		
 		// print(claimers, coalitions);
 		
@@ -387,10 +389,10 @@ public class SimulationPanel extends JPanel
 			updateCoalitionClaimers(coalitions, claimers);
 			
 			calculateClaimerRuleAllocations(estate, claimers);
-			RuleCalculator.calculateReference(estate, coalitions, claimers);
+			RuleCalculator.calculateReference(estate, coalitions, claimers, isVersionB);
 			RuleCalculator.calculateShapleyValues(claimers, coalitions);
 			
-			calculateCoalitionRuleAllocations(coalitions);	
+			calculateCoalitionRuleAllocations(coalitions, isVersionB);	
 			
 			ref = RankCalculator.rankingBasedOnReference(coalitions);
 			prop = RankCalculator.rankingBasedOnProportionalAllocation(coalitions);
@@ -480,6 +482,11 @@ public class SimulationPanel extends JPanel
 		}
 	}
 	
+	/**
+	 * Calculate the sum of ranking differences for each CoalitionWithRankingDifference.
+	 * @param List of CoalitionWithRankingDifference.
+	 * @return Sum as a double.
+	 */
 	private static double sumRankingDifferences(List<CoalitionWithRankingDifference> input)
 	{
 		double sum = 0.0;
@@ -490,6 +497,11 @@ public class SimulationPanel extends JPanel
 		return sum;
 	}
 	
+	/**
+	 * Calculate every rule allocation for each claimer.
+	 * @param Estate.
+	 * @param List of claimers.
+	 */
 	private static void calculateClaimerRuleAllocations(double estate, List<Claimer> claimers)
 	{
 		RuleCalculator.proportionalRuleAllocation(estate, claimers);
@@ -503,21 +515,30 @@ public class SimulationPanel extends JPanel
 		RuleCalculator.uniformRandomAllocation(estate, claimers);
 	}
 	
-	private static void calculateCoalitionRuleAllocations(List<Coalition> coalitions)
+	/**
+	 * Calculate every rule allocation for each coalition.
+	 * @param List of coalitions.
+	 */
+	private static void calculateCoalitionRuleAllocations(List<Coalition> coalitions, boolean isVersionB)
 	{
-		RuleCalculator.calculateCoalitionProportionalAllocation(coalitions);
-		RuleCalculator.calculateCoalitionCEAAllocation(coalitions);
-		RuleCalculator.calculateCoalitionCELAllocation(coalitions);
-		RuleCalculator.calculateCoalitionAdjustedProportionalAllocation(coalitions);
-		RuleCalculator.calculateCoalitionShapleyAllocation(coalitions);
-		RuleCalculator.calculateCoalitionTalmudAllocation(coalitions);
-		RuleCalculator.calculateCoalitionMinimalOverlappingAllocation(coalitions);
-		RuleCalculator.calculateCoalitionClightsAllocation(coalitions);
-		RuleCalculator.calculateCoalitionEqualAllocation(coalitions);
-		RuleCalculator.calculateCoalitionUniformRandomAllocation(coalitions);
+		RuleCalculator.calculateCoalitionProportionalAllocation(coalitions, isVersionB);
+		RuleCalculator.calculateCoalitionCEAAllocation(coalitions, isVersionB);
+		RuleCalculator.calculateCoalitionCELAllocation(coalitions, isVersionB);
+		RuleCalculator.calculateCoalitionAdjustedProportionalAllocation(coalitions, isVersionB);
+		RuleCalculator.calculateCoalitionShapleyAllocation(coalitions, isVersionB);
+		RuleCalculator.calculateCoalitionTalmudAllocation(coalitions, isVersionB);
+		RuleCalculator.calculateCoalitionMinimalOverlappingAllocation(coalitions, isVersionB);
+		RuleCalculator.calculateCoalitionClightsAllocation(coalitions, isVersionB);
+		RuleCalculator.calculateCoalitionEqualAllocation(coalitions, isVersionB);
+		RuleCalculator.calculateCoalitionUniformRandomAllocation(coalitions, isVersionB);
 	}
 	
 	// update the claims of every claimer in the coalition lists
+	/**
+	 * Updates the claims of every claimer in each coalition's claimer list.
+	 * @param List of coalitions that need to be updated.
+	 * @param List of claimers with new claim values.
+	 */
 	private static void updateCoalitionClaimers(List<Coalition> coalitions, List<Claimer> claimers)
 	{
 		for(Coalition coalition : coalitions)
@@ -525,11 +546,13 @@ public class SimulationPanel extends JPanel
 			for(Claimer claimer : coalition.getClaimers())
 			{
 				claimer.setClaim(claimers.get(claimers.indexOf(claimer)).getClaim());
-				// clearClaimer(claimer);
 			}
 		}
 	}
 	
+	/**
+	 * Disable all editable JTextFields and JButtons.
+	 */
 	private void disableAllButtons()
 	{
 		numberOfCreditors.setEditable(false);
@@ -538,6 +561,9 @@ public class SimulationPanel extends JPanel
 		runButton.setEnabled(false);	
 	}
 	
+	/**
+	 * Enable all editable JTextFields and JButtons.
+	 */
 	private void enableAllButtons()
 	{
 		numberOfCreditors.setEditable(true);
@@ -546,6 +572,11 @@ public class SimulationPanel extends JPanel
 		runButton.setEnabled(true);		
 	}
 	
+	/**
+	 * Simple button template.
+	 * @param String text of the JButton.
+	 * @return A JButton created with the specific customizations.
+	 */
 	private static JButton createSimpleButton(String text) 
 	{
 		  JButton button = new JButton(text);
