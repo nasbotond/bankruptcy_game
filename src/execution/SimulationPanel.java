@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -40,6 +41,8 @@ public class SimulationPanel extends JPanel
 	private JTextField numberOfCreditors;
 	
 	private JLabel numberOfCreditorsLabel;
+	
+	private JLabel referenceComboLabel;
 	
 	private JLabel maximumDiffLabel;
 	private JLabel propLabel;
@@ -65,10 +68,13 @@ public class SimulationPanel extends JPanel
 	
 	private JPanel canvasPanel;
 	private JPanel numCreditorsPanel;
+	private JPanel referenceComboPanel;
 	private JPanel estatePanel;
 	private JPanel inputsPanel;
 	private JPanel buttonsPanel;
 	private JPanel averagesPanel;
+	
+	private JComboBox<String> referenceSelectionCombo;
 	
 	private JLabel numIterations;
 	private boolean stop = false;
@@ -102,6 +108,23 @@ public class SimulationPanel extends JPanel
 		// inputs
 		inputsPanel = new JPanel(new BorderLayout());
 		inputsPanel.setBackground(Color.WHITE);
+		
+		referenceComboPanel = new JPanel();
+		referenceComboPanel.setBackground(Color.WHITE);
+		String[] referenceOptions = {"characteristic function", "average of rules", "proportional rule", "CEA rule", "CEL rule", "Talmud rule",
+				"adjusted proportional rule", "minimal overlapping rule", "per capita nucleolous rule", "Shapley values", "equal allocation",
+				"uniform random allocation"};
+		referenceSelectionCombo = new JComboBox<String>(referenceOptions);
+		referenceSelectionCombo.setFont(new Font("Serif", Font.PLAIN, 18));
+		referenceSelectionCombo.setBackground(Color.WHITE);
+		referenceSelectionCombo.setSelectedIndex(0);
+		referenceSelectionCombo.setBounds(50, 100,90,20);	
+		
+		referenceComboLabel = new JLabel("Reference: ");
+		referenceComboLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+		
+		referenceComboPanel.add(referenceComboLabel);
+		referenceComboPanel.add(referenceSelectionCombo);
 		
 		numberOfCreditorsLabel = new JLabel("Number of Creditors: ");
 		numberOfCreditorsLabel.setFont(new Font("Serif", Font.PLAIN, 21));
@@ -139,8 +162,9 @@ public class SimulationPanel extends JPanel
 		estatePanel.add(estateFunctionMax);
 		estatePanel.add(estateFunctionLabel2);
 		
-		inputsPanel.add(numCreditorsPanel, BorderLayout.NORTH);
-		inputsPanel.add(estatePanel, BorderLayout.CENTER);
+		inputsPanel.add(referenceComboPanel, BorderLayout.NORTH);
+		inputsPanel.add(numCreditorsPanel, BorderLayout.CENTER);
+		inputsPanel.add(estatePanel, BorderLayout.SOUTH);
 		
 		canvasPanel.add(inputsPanel, BorderLayout.NORTH);
 		canvasPanel.add(buttonsPanel, BorderLayout.CENTER);
@@ -331,9 +355,10 @@ public class SimulationPanel extends JPanel
 							(RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMax.getText())));
 		
 		calculateClaimerRuleAllocations(estate, claimers);
-		RuleCalculator.calculateReference(estate, coalitions, claimers, isVersionB);
-		RuleCalculator.calculateShapleyValues(claimers, coalitions);
+		RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, isVersionB);
+		RuleCalculator.calculateShapleyValues(estate, claimers, coalitions, isVersionB);		
 		calculateCoalitionRuleAllocations(coalitions, isVersionB);	
+		RuleCalculator.calculateReference(referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()), coalitions);
 		
 		// print(claimers, coalitions);
 		
@@ -389,10 +414,10 @@ public class SimulationPanel extends JPanel
 			updateCoalitionClaimers(coalitions, claimers);
 			
 			calculateClaimerRuleAllocations(estate, claimers);
-			RuleCalculator.calculateReference(estate, coalitions, claimers, isVersionB);
-			RuleCalculator.calculateShapleyValues(claimers, coalitions);
-			
+			RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, isVersionB);
+			RuleCalculator.calculateShapleyValues(estate, claimers, coalitions, isVersionB);		
 			calculateCoalitionRuleAllocations(coalitions, isVersionB);	
+			RuleCalculator.calculateReference(referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()), coalitions);
 			
 			ref = RankCalculator.rankingBasedOnReference(coalitions);
 			prop = RankCalculator.rankingBasedOnProportionalAllocation(coalitions);

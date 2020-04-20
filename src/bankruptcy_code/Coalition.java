@@ -6,7 +6,8 @@ public class Coalition
 {
 	private List<Claimer> claimers;
 	private String id;
-	private double reference; // characteristic function
+	private double reference; // reference value
+	private double characteristicFunction; // characteristic function
 	private double proportionalAllocation; // proportional rule
 	private double CEAAllocation; // constrained equal awards rule
 	private double CELAllocation; // constrained equal losses rule
@@ -41,6 +42,16 @@ public class Coalition
 	public void setReference(double reference) 
 	{
 		this.reference = reference;
+	}
+	
+	public double getCharacteristicFunction() 
+	{
+		return characteristicFunction;
+	}
+
+	public void setCharacteristicFunction(double characteristicFunction) 
+	{
+		this.characteristicFunction = characteristicFunction;
 	}
 
 	public double getProportionalAllocation() 

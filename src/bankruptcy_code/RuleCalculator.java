@@ -14,8 +14,17 @@ public class RuleCalculator
 	}
 	
 	// calculates the Shapley values of the claimers and puts them in a double array
-	public static double[] calculateShapleyValues(List<Claimer> claimers, List<Coalition> coalitions)
+	public static double[] calculateShapleyValues(double estate, List<Claimer> claimers, List<Coalition> coalitions, boolean isVersionB)
 	{
+		
+		List<Coalition> coalitionsClone = new ArrayList<Coalition>(); // deep copy of coalitions
+		for(Coalition coalition : coalitions)
+		{
+			coalitionsClone.add(new Coalition(coalition.getClaimers()));
+		}
+		
+		calculateCharacteristicFunction(estate, coalitionsClone, claimers, false);
+		
 		List<Claimer> claimersClone = new ArrayList<Claimer>(claimers);
 		List<List<Claimer>> permutations = CustomMathOperations.generatePermutation(claimersClone);
 		
@@ -35,19 +44,19 @@ public class RuleCalculator
 				    }
 				});
 				
-				for(Coalition coalition : coalitions)
+				for(Coalition coalition : coalitionsClone)
 				{
 					if(coalition.getClaimers().equals(currentCoalition)) 
 					{
 						if(currentCoalition.size() == 1)
 						{
-							shapleys[claimers.indexOf(permutation.get(i))] += coalition.getReference();
+							shapleys[claimers.indexOf(permutation.get(i))] += coalition.getCharacteristicFunction();
 						}
 						else
 						{
-							shapleys[claimers.indexOf(permutation.get(i))] += (coalition.getReference() - previousReference);
+							shapleys[claimers.indexOf(permutation.get(i))] += (coalition.getCharacteristicFunction() - previousReference);
 						}
-						previousReference = coalition.getReference();
+						previousReference = coalition.getCharacteristicFunction();
 					}
 				}
 			}
@@ -516,8 +525,29 @@ public class RuleCalculator
 		}
 	}
 	
-	// v(s) function: used as reference point for SRD
-	public static void calculateReference(double estate, List<Coalition> coalitions, List<Claimer> allClaimers, boolean isVersionB)
+	public static void calculateCharacteristicFunction(double estate, List<Coalition> coalitions, List<Claimer> claimers, boolean isVersionB)
+	{
+		double sumOfAllClaims = sum(claimers, "claims");
+		
+		for(Coalition entry : coalitions)
+		{
+			double sumCurrentCoalition = sum(entry.getClaimers(), "claims");			
+			
+			double maxUpperBound = estate - (sumOfAllClaims - sumCurrentCoalition);
+			if(isVersionB)
+			{
+				entry.setCharacteristicFunction(Math.max(0, maxUpperBound)/entry.getClaimers().size());
+			}
+			else
+			{
+				entry.setCharacteristicFunction(Math.max(0, maxUpperBound));
+			}			
+		}
+		
+	}
+	
+	/*
+	public static void calculateReferenceOLD(double estate, List<Coalition> coalitions, List<Claimer> allClaimers, boolean isVersionB)
 	{
 		double sumOfAllClaims = sum(allClaimers, "claims");
 		
@@ -534,6 +564,89 @@ public class RuleCalculator
 			{
 				entry.setReference(Math.max(0, maxUpperBound));
 			}			
+		}
+	}
+	*/
+	
+	// v(s) function: used as reference point for SRD
+	public static void calculateReference(String reference, List<Coalition> coalitions)
+	{
+		switch(reference)
+		{
+		case("characteristic function"):
+			for(Coalition coalition : coalitions)
+			{
+				coalition.setReference(coalition.getCharacteristicFunction());
+			}
+		break;
+		case("average of rules"):
+			for(Coalition coalition : coalitions)
+			{
+				coalition.setReference((coalition.getProportionalAllocation() + coalition.getCEAAllocation()
+				+ coalition.getCELAllocation() + coalition.getTalmudAllocation() + coalition.getAdjustedProportionalAllocation() 
+				+ coalition.getClightsAllocation() + coalition.getMinimalOverlappingAllocation() + coalition.getShapleyValueAllocation())/8);
+			}
+		break;
+		case("proportional rule"):
+			for(Coalition coalition : coalitions)
+			{
+				coalition.setReference(coalition.getCharacteristicFunction());
+			}
+		break;
+		case("CEA rule"):
+			for(Coalition coalition : coalitions)
+			{
+				coalition.setReference(coalition.getCEAAllocation());
+			}
+		break;
+		case("CEL rule"):
+			for(Coalition coalition : coalitions)
+			{
+				coalition.setReference(coalition.getCELAllocation());
+			}
+		break;
+		case("Talmud rule"):
+			for(Coalition coalition : coalitions)
+			{
+				coalition.setReference(coalition.getTalmudAllocation());
+			}
+		break;
+		case("adjusted proportional rule"):
+			for(Coalition coalition : coalitions)
+			{
+				coalition.setReference(coalition.getAdjustedProportionalAllocation());
+			}
+		break;
+		case("per capita nucleolous rule"):
+			for(Coalition coalition : coalitions)
+			{
+				coalition.setReference(coalition.getClightsAllocation());
+			}
+		break;
+		case("minimal overlapping rule"):
+			for(Coalition coalition : coalitions)
+			{
+				coalition.setReference(coalition.getMinimalOverlappingAllocation());
+			}
+		break;
+		case("Shapley values"):
+			for(Coalition coalition : coalitions)
+			{
+				coalition.setReference(coalition.getShapleyValueAllocation());
+			}
+		break;
+		case("equal allocation"):
+			for(Coalition coalition : coalitions)
+			{
+				coalition.setReference(coalition.getEqualAllocation());
+			}
+		break;
+		case("uniform random allocation"):
+			for(Coalition coalition : coalitions)
+			{
+				coalition.setReference(coalition.getUniformRandomAllocation());
+			}
+		break;
 		}
 	}
 	

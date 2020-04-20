@@ -46,15 +46,19 @@ public class ExactCalculationPanel extends JPanel
 	
 	private JLabel estateLabel;
 	private JLabel comboLabel;
+	private JLabel referenceComboLabel;
 	
 	private JButton runButton;
 	
 	private JPanel canvasPanel;
+	private JPanel creditorsComboPanel;
+	private JPanel referenceComboPanel;
 	private JPanel comboPanel;
 	private JPanel inputsPanel;
 	private JPanel buttonsPanel;
 	
 	private JComboBox<Integer> numCreditorsCombo;
+	private JComboBox<String> referenceSelectionCombo;
 	
 	private List<JTextField> listOfCreditorInputs;
 	
@@ -68,8 +72,11 @@ public class ExactCalculationPanel extends JPanel
 		this.isVersionB = isVersionB;
 		this.setLayout(new GridLayout());
 
-		comboPanel = new JPanel();
+		comboPanel = new JPanel(new BorderLayout());
 		comboPanel.setBackground(Color.WHITE);
+		
+		creditorsComboPanel = new JPanel();
+		creditorsComboPanel.setBackground(Color.WHITE);
 		Integer[] creditorNumber = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 		numCreditorsCombo = new JComboBox<Integer>(creditorNumber);
 		numCreditorsCombo.setFont(new Font("Serif", Font.PLAIN, 18));
@@ -80,10 +87,30 @@ public class ExactCalculationPanel extends JPanel
 		comboLabel = new JLabel("Number of creditors: ");
 		comboLabel.setFont(new Font("Serif", Font.PLAIN, 21));
 		
-		comboPanel.add(comboLabel);
-		comboPanel.add(numCreditorsCombo);
+		creditorsComboPanel.add(comboLabel);
+		creditorsComboPanel.add(numCreditorsCombo);
 		
 		listOfCreditorInputs = new ArrayList<JTextField>();
+		
+		referenceComboPanel = new JPanel();
+		referenceComboPanel.setBackground(Color.WHITE);
+		String[] referenceOptions = {"characteristic function", "average of rules", "proportional rule", "CEA rule", "CEL rule", "Talmud rule",
+				"adjusted proportional rule", "minimal overlapping rule", "per capita nucleolous rule", "Shapley values", "equal allocation",
+				"uniform random allocation"};
+		referenceSelectionCombo = new JComboBox<String>(referenceOptions);
+		referenceSelectionCombo.setFont(new Font("Serif", Font.PLAIN, 18));
+		referenceSelectionCombo.setBackground(Color.WHITE);
+		referenceSelectionCombo.setSelectedIndex(0);
+		referenceSelectionCombo.setBounds(50, 100,90,20);	
+		
+		referenceComboLabel = new JLabel("Reference: ");
+		referenceComboLabel.setFont(new Font("Serif", Font.PLAIN, 21));
+		
+		referenceComboPanel.add(referenceComboLabel);
+		referenceComboPanel.add(referenceSelectionCombo);
+		
+		comboPanel.add(referenceComboPanel, BorderLayout.NORTH);
+		comboPanel.add(creditorsComboPanel, BorderLayout.CENTER);
 		
 		canvasPanel = new JPanel(new BorderLayout());
 		
@@ -131,14 +158,14 @@ public class ExactCalculationPanel extends JPanel
 		});
 
 		canvasPanel.add(comboPanel, BorderLayout.NORTH);
-		canvasPanel.add(inputsPanel, BorderLayout.CENTER);
+		canvasPanel.add(inputsPanel, BorderLayout.CENTER);		
 		
 		// console panel:
 		//
 		
 		consolePanel = new JPanel(new BorderLayout());
 		consolePanel.setBackground(Color.WHITE);						
-		consoleOutput = new JTextArea(30, 60);
+		consoleOutput = new JTextArea(29, 60);
 		consoleOutput.setEditable(false);
 		JScrollPane scrollPane = new JScrollPane(consoleOutput);	
 		
@@ -259,10 +286,12 @@ public class ExactCalculationPanel extends JPanel
 			}
 			
 			calculateClaimerRuleAllocations(estateInput, claimers);
-			RuleCalculator.calculateReference(estateInput, coalitions, claimers, isVersionB);		
-			RuleCalculator.calculateShapleyValues(claimers, coalitions); // needs to be after calculateReference() because it needs the reference values for calculation	
-			
+			RuleCalculator.calculateCharacteristicFunction(estateInput, coalitions, claimers, isVersionB);
+			RuleCalculator.calculateShapleyValues(estateInput, claimers, coalitions, isVersionB); // also calculates the characteristic function				
 			calculateCoalitionRuleAllocations(coalitions, isVersionB);
+			RuleCalculator.calculateReference(referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()), coalitions);
+			
+			// RuleCalculator.calculateReferenceOLD(estateInput, coalitions, claimers, isVersionB);
 			
 			List<CoalitionWithRankingDifference> ref = RankCalculator.rankingBasedOnReference(coalitions);
 			List<CoalitionWithRankingDifference> prop = RankCalculator.rankingBasedOnProportionalAllocation(coalitions);
@@ -303,67 +332,67 @@ public class ExactCalculationPanel extends JPanel
 			{
 				System.out.println("REF   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank());
 			}
-			System.out.println("sum of REF ranking differences : " + sumRankingDifferences(ref));
+			System.out.println();
 			
 			for(CoalitionWithRankingDifference entry : prop)
 			{
 				System.out.println("PROP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 			}
-			System.out.println("sum of PROP ranking differences : " + sumRankingDifferences(prop));
+			System.out.println("\nsum of PROP ranking differences : " + sumRankingDifferences(prop) + "\n");
 			
 			for(CoalitionWithRankingDifference entry : cea)
 			{
 				System.out.println("CEA   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 			}
-			System.out.println("sum of CEA ranking differences : " + sumRankingDifferences(cea));
+			System.out.println("\nsum of CEA ranking differences : " + sumRankingDifferences(cea)+ "\n");
 			
 			for(CoalitionWithRankingDifference entry : cel)
 			{
 				System.out.println("CEL   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 			}
-			System.out.println("sum of CEL ranking differences : " + sumRankingDifferences(cel));
+			System.out.println("\nsum of CEL ranking differences : " + sumRankingDifferences(cel)+ "\n");
 			
 			for(CoalitionWithRankingDifference entry : aprop)
 			{
 				System.out.println("APROP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 			}
-			System.out.println("sum of APROP ranking differences : " + sumRankingDifferences(aprop));
+			System.out.println("\nsum of APROP ranking differences : " + sumRankingDifferences(aprop) + "\n");
 			
 			for(CoalitionWithRankingDifference entry : shap)
 			{
 				System.out.println("SHAP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 			}	
-			System.out.println("sum of SHAP ranking differences : " + sumRankingDifferences(shap));
+			System.out.println("\nsum of SHAP ranking differences : " + sumRankingDifferences(shap) + "\n");
 			
 			for(CoalitionWithRankingDifference entry : tal)
 			{
 				System.out.println("TAL   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 			}
-			System.out.println("sum of TAL ranking differences : " + sumRankingDifferences(tal));
+			System.out.println("\nsum of TAL ranking differences : " + sumRankingDifferences(tal) + "\n");
 			
 			for(CoalitionWithRankingDifference entry : mo)
 			{
 				System.out.println("MO   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 			}
-			System.out.println("sum of MO ranking differences : " + sumRankingDifferences(mo));
+			System.out.println("\nsum of MO ranking differences : " + sumRankingDifferences(mo) + "\n");
 			
 			for(CoalitionWithRankingDifference entry : cli)
 			{
 				System.out.println("CLI   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 			}
-			System.out.println("sum of CLI ranking differences : " + sumRankingDifferences(cli));
+			System.out.println("\nsum of CLI ranking differences : " + sumRankingDifferences(cli) + "\n");
 			
 			for(CoalitionWithRankingDifference entry : eq)
 			{
 				System.out.println("EQ   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 			}
-			System.out.println("sum of EQ ranking differences : " + sumRankingDifferences(eq));
+			System.out.println("\nsum of EQ ranking differences : " + sumRankingDifferences(eq) + "\n");
 			
 			for(CoalitionWithRankingDifference entry : unirand)
 			{
 				System.out.println("UNIRAND   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 			}
-			System.out.println("sum of UNIRAND ranking differences : " + sumRankingDifferences(unirand));
+			System.out.println("\nsum of UNIRAND ranking differences : " + sumRankingDifferences(unirand) + "\n");
 		}
 		else
 		{
@@ -389,6 +418,7 @@ public class ExactCalculationPanel extends JPanel
 			+ " TAL: " + entry.getTalmudAllocation() + " MO: " + entry.getMinimalOverlappingAllocation() + " APROP: " + entry.getAdjustedProportionalAllocation()
 			+ " CLI: " + entry.getClightsAllocation() + " EQ: " + entry.getEqualAllocation() + " UNIRAND: " + entry.getUniformRandomAllocation());
 		}
+		System.out.println();
 	}
 	
 	private static double sumRankingDifferences(List<CoalitionWithRankingDifference> input)
