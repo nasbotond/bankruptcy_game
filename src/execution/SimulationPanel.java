@@ -9,6 +9,8 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -471,7 +473,15 @@ public class SimulationPanel extends JPanel
 			
 			numIterations.setText("iterations: " + iterations);  // update iterations label in UI
 		}
-
+		try 
+		{
+			saveToFile(isVersionB, referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()), Integer.parseInt(numberOfCreditors.getText()), 
+					Double.parseDouble(estateFunctionMin.getText()), Double.parseDouble(estateFunctionMax.getText()),  iterations);
+		}
+		catch(IOException ex)
+		{
+			ex.printStackTrace();
+		}
 		enableAllButtons();
 		stop = false;
 	}
@@ -580,6 +590,7 @@ public class SimulationPanel extends JPanel
 	 */
 	private void disableAllButtons()
 	{
+		referenceSelectionCombo.setEnabled(false);
 		numberOfCreditors.setEditable(false);
 		estateFunctionMin.setEditable(false);
 		estateFunctionMax.setEditable(false);
@@ -591,6 +602,7 @@ public class SimulationPanel extends JPanel
 	 */
 	private void enableAllButtons()
 	{
+		referenceSelectionCombo.setEnabled(true);
 		numberOfCreditors.setEditable(true);
 		estateFunctionMin.setEditable(true);
 		estateFunctionMax.setEditable(true);
@@ -612,5 +624,37 @@ public class SimulationPanel extends JPanel
 		  Border compound = new CompoundBorder(line, margin);
 		  button.setBorder(compound);
 		  return button;
+	}
+	
+	private void saveToFile(boolean versionB, String reference, int numAgents, double min, double max, int iterations) throws IOException
+	{
+		FileWriter fw;
+		if(!versionB)
+		{
+			fw = new FileWriter("sim_versionA_ref-" + reference + "_numAgents-" + numAgents + "_percent-range-" + min + "-"
+					+ max + "_iter-" + iterations + ".txt");	
+			fw.write("Version A\nreference: " + reference + "\nNumber of Creditors: " + numAgents + "\nRange min.: " + min
+					+ ", max.: " + max + "\niterations: " + iterations + "\n");
+		}
+		else
+		{
+			fw = new FileWriter("sim_versionB_ref-" + reference + "_numAgents-" + numAgents + "_percent-range-" + min + "-"
+					+ max + "_iter-" + iterations + ".txt");
+			fw.write("Version B\nreference: " + reference + "\nNumber of Creditors: " + numAgents + "\nRange min.: " + min
+					+ ", max.: " + max + "\niterations: " + iterations + "\n");
+		}		 
+		
+		fw.write(propLabel.getText() + "\n");
+		fw.write(ceaLabel.getText() + "\n");
+		fw.write(celLabel.getText() + "\n");
+		fw.write(apropLabel.getText() + "\n");
+		fw.write(shapLabel.getText() + "\n");
+		fw.write(talLabel.getText() + "\n");
+		fw.write(moLabel.getText() + "\n");
+		fw.write(cliLabel.getText() + "\n");
+		fw.write(eqLabel.getText() + "\n");
+		fw.write(unirandLabel.getText() + "\n");
+	 
+		fw.close();
 	}
 }

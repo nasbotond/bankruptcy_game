@@ -8,9 +8,12 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -168,7 +171,7 @@ public class ExactCalculationPanel extends JPanel
 		consoleOutput = new JTextArea(29, 60);
 		consoleOutput.setEditable(false);
 		JScrollPane scrollPane = new JScrollPane(consoleOutput);	
-		
+		/*
 		PrintStream out = null;
 		try 
 		{
@@ -179,9 +182,11 @@ public class ExactCalculationPanel extends JPanel
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+		
 		System.setOut(out);
-		System.setErr(out);
-			
+		System.setErr(out);			
+		*/
+		
 		/*
 		PrintStream printStream = new PrintStream(new CustomOutputStream(consoleOutput));
 					
@@ -225,11 +230,11 @@ public class ExactCalculationPanel extends JPanel
 						{
 							try
 							{
-								PrintWriter pw = new PrintWriter("output.txt");
-								pw.close();
+								// PrintWriter pw = new PrintWriter("output.txt");
+								// pw.close();
 								calculateExactSRD(isVersionB);
-								FileReader reader = new FileReader("output.txt");
-								consoleOutput.read(reader, "output.txt"); // Object of JTextArea
+								// FileReader reader = new FileReader("output.txt");
+								// consoleOutput.read(reader, "output.txt"); // Object of JTextArea
 							}
 							catch(Exception exception)  // TODO?
 							{
@@ -317,6 +322,132 @@ public class ExactCalculationPanel extends JPanel
 			RankCalculator.compareRanks(eq, ref);
 			RankCalculator.compareRanks(unirand, ref);
 			
+			FileWriter fw;
+			try
+			{
+				if(!isVersionB)
+				{
+					fw = new FileWriter("exact_versionA_ref-" + referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()) 
+					+ "_numAgents-" + listOfCreditorInputs.size() + "_estate-" + Double.parseDouble(estate.getText()) + ".txt");	
+					
+					writeToConsoleAndFile(consoleOutput, fw, "Version A\nreference: "
+							+ referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()) + "\nNumber of Creditors: "
+							+ listOfCreditorInputs.size() + "\nEstate: " + Double.parseDouble(estate.getText()) + "\n");
+				}
+				else
+				{
+					fw = new FileWriter("exact_versionB_ref-" + referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()) 
+					+ "_numAgents-" + listOfCreditorInputs.size() + "_estate-" + Double.parseDouble(estate.getText()) + ".txt");
+					
+					writeToConsoleAndFile(consoleOutput, fw, "Version B\nreference: "
+							+ referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()) 
+							+ "\nNumber of Creditors: " + listOfCreditorInputs.size() + "\nEstate: " + Double.parseDouble(estate.getText()) + "\n");
+				}		
+
+				writeToConsoleAndFile(consoleOutput, fw, "\nClaimers\n");
+
+				for(Claimer entry : claimers)
+				{
+					writeToConsoleAndFile(consoleOutput, fw, entry.getId() + " Claim: " + entry.getClaim() + " PROP: " + entry.getProportionalAllocation() + " CEA: " + entry.getCEAAllocation()
+					+ " CEL: " + entry.getCELAllocation()  + " SHAP: " + entry.getShapleyValue()  + " TAL: " + entry.getTalmudAllocation()
+					+ " MO: " + entry.getMinimalOverlappingAllocation() + " APROP: " + entry.getAdjustedProportionalAllocation()
+					+ " CLI: " + entry.getClightsAllocation() + " EQ: " + entry.getEqualAllocation() + " UNIRAND: " + entry.getUniformRandomAllocation() + "\n");
+				}	
+
+				writeToConsoleAndFile(consoleOutput, fw, "\nCoalitions\n");
+				for(Coalition entry : coalitions)
+				{
+					writeToConsoleAndFile(consoleOutput, fw, entry.getId() + " Claim: " + entry.coalitionClaim() + " REF: " + entry.getReference() + " PROP: " + entry.getProportionalAllocation()
+					+ " CEA: " + entry.getCEAAllocation()+ " CEL: " + entry.getCELAllocation() + " SHAP: " + entry.getShapleyValueAllocation()
+					+ " TAL: " + entry.getTalmudAllocation() + " MO: " + entry.getMinimalOverlappingAllocation() + " APROP: " + entry.getAdjustedProportionalAllocation()
+					+ " CLI: " + entry.getClightsAllocation() + " EQ: " + entry.getEqualAllocation() + " UNIRAND: " + entry.getUniformRandomAllocation() + "\n");
+				}
+
+				writeToConsoleAndFile(consoleOutput, fw, "\n");
+				for(CoalitionWithRankingDifference entry : ref)
+				{
+					writeToConsoleAndFile(consoleOutput, fw, "REF   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + "\n");
+				}
+
+				writeToConsoleAndFile(consoleOutput, fw, "\n");
+				for(CoalitionWithRankingDifference entry : prop)
+				{
+					writeToConsoleAndFile(consoleOutput, fw, "PROP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+				}
+				writeToConsoleAndFile(consoleOutput, fw, "sum of PROP ranking differences : " + sumRankingDifferences(prop) + "\n");
+
+				writeToConsoleAndFile(consoleOutput, fw, "\n");
+				for(CoalitionWithRankingDifference entry : cea)
+				{
+					writeToConsoleAndFile(consoleOutput, fw, "CEA   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+				}
+				writeToConsoleAndFile(consoleOutput, fw, "sum of CEA ranking differences : " + sumRankingDifferences(cea)+ "\n");
+				writeToConsoleAndFile(consoleOutput, fw, "\n");
+
+				for(CoalitionWithRankingDifference entry : cel)
+				{
+					writeToConsoleAndFile(consoleOutput, fw, "CEL   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+				}
+				writeToConsoleAndFile(consoleOutput, fw, "sum of CEL ranking differences : " + sumRankingDifferences(cel)+ "\n");
+				writeToConsoleAndFile(consoleOutput, fw, "\n");
+
+				for(CoalitionWithRankingDifference entry : aprop)
+				{
+					writeToConsoleAndFile(consoleOutput, fw, "APROP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+				}
+				writeToConsoleAndFile(consoleOutput, fw, "sum of APROP ranking differences : " + sumRankingDifferences(aprop) + "\n");
+				writeToConsoleAndFile(consoleOutput, fw, "\n");
+
+				for(CoalitionWithRankingDifference entry : shap)
+				{
+					writeToConsoleAndFile(consoleOutput, fw, "SHAP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+				}	
+				writeToConsoleAndFile(consoleOutput, fw, "sum of SHAP ranking differences : " + sumRankingDifferences(shap) + "\n");
+				writeToConsoleAndFile(consoleOutput, fw, "\n");
+
+				for(CoalitionWithRankingDifference entry : tal)
+				{
+					writeToConsoleAndFile(consoleOutput, fw, "TAL   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+				}
+				writeToConsoleAndFile(consoleOutput, fw, "sum of TAL ranking differences : " + sumRankingDifferences(tal) + "\n");
+				writeToConsoleAndFile(consoleOutput, fw, "\n");
+
+				for(CoalitionWithRankingDifference entry : mo)
+				{
+					writeToConsoleAndFile(consoleOutput, fw, "MO   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+				}
+				writeToConsoleAndFile(consoleOutput, fw, "sum of MO ranking differences : " + sumRankingDifferences(mo) + "\n");
+				writeToConsoleAndFile(consoleOutput, fw, "\n");
+
+				for(CoalitionWithRankingDifference entry : cli)
+				{
+					writeToConsoleAndFile(consoleOutput, fw, "CLI   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+				}
+				writeToConsoleAndFile(consoleOutput, fw, "sum of CLI ranking differences : " + sumRankingDifferences(cli) + "\n");
+				writeToConsoleAndFile(consoleOutput, fw, "\n");
+
+				for(CoalitionWithRankingDifference entry : eq)
+				{
+					writeToConsoleAndFile(consoleOutput, fw, "EQ   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+				}
+				writeToConsoleAndFile(consoleOutput, fw, "sum of EQ ranking differences : " + sumRankingDifferences(eq) + "\n");
+				writeToConsoleAndFile(consoleOutput, fw, "\n");
+
+				for(CoalitionWithRankingDifference entry : unirand)
+				{
+					writeToConsoleAndFile(consoleOutput, fw, "UNIRAND   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+				}
+				writeToConsoleAndFile(consoleOutput, fw, "sum of UNIRAND ranking differences : " + sumRankingDifferences(unirand) + "\n");
+				writeToConsoleAndFile(consoleOutput, fw, "\n");
+
+				fw.close();				
+			}
+			catch(IOException ex)
+			{
+				ex.printStackTrace();
+			}
+			
+			/*
 			if(isVersionB)
 			{
 				System.out.println("VERSION B");
@@ -324,7 +455,7 @@ public class ExactCalculationPanel extends JPanel
 			else
 			{
 				System.out.println("VERSION A");
-			}
+			}			
 			
 			print(claimers, coalitions);
 			
@@ -393,6 +524,7 @@ public class ExactCalculationPanel extends JPanel
 				System.out.println("UNIRAND   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
 			}
 			System.out.println("\nsum of UNIRAND ranking differences : " + sumRankingDifferences(unirand) + "\n");
+			*/
 		}
 		else
 		{
@@ -468,6 +600,12 @@ public class ExactCalculationPanel extends JPanel
 		  Border compound = new CompoundBorder(line, margin);
 		  button.setBorder(compound);
 		  return button;
+	}
+	
+	private static void writeToConsoleAndFile(JTextArea area, FileWriter fw, String string) throws IOException
+	{
+		fw.write(string);
+		area.append(string);
 	}
 }
  

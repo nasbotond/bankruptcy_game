@@ -205,6 +205,18 @@ public class Coalition
 		
 		this.claimers = claimers;
 	}
+	
+	public double coalitionClaim()
+	{
+		double sumOfClaims = 0;
+		
+		for(Claimer claimer : getClaimers())
+		{
+			sumOfClaims += claimer.getClaim();
+		}
+		
+		return sumOfClaims;
+	}
 
 	@Override
 	public String toString() {
