@@ -292,7 +292,14 @@ public class ExactCalculationPanel extends JPanel
 			
 			calculateClaimerRuleAllocations(estateInput, claimers);
 			RuleCalculator.calculateCharacteristicFunction(estateInput, coalitions, claimers, isVersionB);
-			RuleCalculator.calculateShapleyValues(estateInput, claimers, coalitions, isVersionB); // also calculates the characteristic function				
+			// long startTime = System.nanoTime();
+			RuleCalculator.calculateShapleyValues(estateInput, claimers, coalitions, isVersionB); // also calculates the characteristic function
+			/*
+			long endTime = System.nanoTime();
+			long elapsedTime = endTime - startTime;
+			System.out.println(elapsedTime);
+			System.out.println("shap time: " + ((double) elapsedTime/1_000_000_000) + " seconds");
+			*/
 			calculateCoalitionRuleAllocations(coalitions, isVersionB);
 			RuleCalculator.calculateReference(referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()), coalitions);
 			

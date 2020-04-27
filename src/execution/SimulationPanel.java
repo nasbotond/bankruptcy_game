@@ -363,7 +363,7 @@ public class SimulationPanel extends JPanel
 		RuleCalculator.calculateReference(referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()), coalitions);
 		
 		// print(claimers, coalitions);
-		
+		// long startTime = System.nanoTime();
 		ref = RankCalculator.rankingBasedOnReference(coalitions);
 		prop = RankCalculator.rankingBasedOnProportionalAllocation(coalitions);
 		cea = RankCalculator.rankingBasedOnCEAAllocation(coalitions);
@@ -375,6 +375,12 @@ public class SimulationPanel extends JPanel
 		cli = RankCalculator.rankingBasedOnClightsAllocation(coalitions);
 		eq = RankCalculator.rankingBasedOnEqualAllocation(coalitions);
 		unirand = RankCalculator.rankingBasedOnUniformRandomAllocation(coalitions);
+		/*
+		long endTime = System.nanoTime();
+		long elapsedTime = endTime - startTime;
+		System.out.println(elapsedTime);
+		System.out.println("ranking time: " + ((double) elapsedTime/1_000_000_000) + " seconds");
+		*/
 		
 		RankCalculator.compareRanks(prop, ref);
 		RankCalculator.compareRanks(cea, ref);
