@@ -25,11 +25,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.border.Border;
-import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
-
 import bankruptcy_code.Claimer;
 import bankruptcy_code.Coalition;
 import bankruptcy_code.CoalitionWithRankingDifference;
@@ -38,7 +34,7 @@ import bankruptcy_code.RankCalculator;
 import bankruptcy_code.RuleCalculator;
 
 @SuppressWarnings("serial")
-public class SimulationPanel extends JPanel
+public class SimulationPanel extends CalculationPanel
 {
 	private JTextField numberOfCreditors;
 	
@@ -343,12 +339,14 @@ public class SimulationPanel extends JPanel
 			powerSet.addAll((Collection<? extends LinkedList<Claimer>>) CustomMathOperations.combination(claimers, i));
 		}
 		
-		List<Coalition> coalitions = new ArrayList<Coalition>(); // master list of coalitions
+		List<Coalition> coalitionsUnordered = new ArrayList<Coalition>(); // master list of coalitions
 		
 		for(LinkedList<Claimer> entry : powerSet)
 		{
-			coalitions.add(new Coalition(entry));
+			coalitionsUnordered.add(new Coalition(entry));
 		}
+		
+		List<Coalition> coalitions = orderCoalitions(coalitionsUnordered);
 		
 		double maximumSRD = (((coalitions.size()-1)*(coalitions.size() - 1)) / 2);
 		maximumDiffLabel.setText("Maximum: 1.0");
@@ -357,11 +355,15 @@ public class SimulationPanel extends JPanel
 							(RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMax.getText())));
 		
 		calculateClaimerRuleAllocations(estate, claimers);
-		RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, isVersionB);
-		RuleCalculator.calculateShapleyValues(estate, claimers, coalitions, isVersionB);		
+		// RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, isVersionB);
+		// RuleCalculator.calculateShapleyValues(estate, claimers, coalitions, isVersionB);	
+		RuleCalculator.shap(estate, claimers, coalitions, isVersionB);
+		
+		// RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, isVersionB); // needs to be called after shapley (because shapley calls same method as version A every time)
+		
 		calculateCoalitionRuleAllocations(coalitions, isVersionB);	
 		RuleCalculator.calculateReference(referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()), coalitions);
-		
+		// coalitions.remove(coalitions.size() - 1); // TODO
 		// print(claimers, coalitions);
 		// long startTime = System.nanoTime();
 		ref = RankCalculator.rankingBasedOnReference(coalitions);
@@ -422,8 +424,9 @@ public class SimulationPanel extends JPanel
 			updateCoalitionClaimers(coalitions, claimers);
 			
 			calculateClaimerRuleAllocations(estate, claimers);
-			RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, isVersionB);
-			RuleCalculator.calculateShapleyValues(estate, claimers, coalitions, isVersionB);		
+			// RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, isVersionB);
+			// RuleCalculator.calculateShapleyValues(estate, claimers, coalitions, isVersionB);
+			RuleCalculator.shap(estate, claimers, coalitions, isVersionB);
 			calculateCoalitionRuleAllocations(coalitions, isVersionB);	
 			RuleCalculator.calculateReference(referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()), coalitions);
 			
@@ -523,57 +526,6 @@ public class SimulationPanel extends JPanel
 		}
 	}
 	
-	/**
-	 * Calculate the sum of ranking differences for each CoalitionWithRankingDifference.
-	 * @param List of CoalitionWithRankingDifference.
-	 * @return Sum as a double.
-	 */
-	private static double sumRankingDifferences(List<CoalitionWithRankingDifference> input)
-	{
-		double sum = 0.0;
-		for(CoalitionWithRankingDifference coalition : input)
-		{
-			sum += coalition.getRankingDifference();
-		}
-		return sum;
-	}
-	
-	/**
-	 * Calculate every rule allocation for each claimer.
-	 * @param Estate.
-	 * @param List of claimers.
-	 */
-	private static void calculateClaimerRuleAllocations(double estate, List<Claimer> claimers)
-	{
-		RuleCalculator.proportionalRuleAllocation(estate, claimers);
-		RuleCalculator.CEARuleAllocation(estate, claimers);
-		RuleCalculator.CELRuleAllocation(estate, claimers);
-		RuleCalculator.adjustedProportionalAllocation(estate, claimers);
-		RuleCalculator.talmudRuleAllocation(estate, claimers);
-		RuleCalculator.clightsRuleAllocation(estate, claimers);
-		RuleCalculator.minimalOverlappingRuleAllocation(estate, claimers);
-		RuleCalculator.equalAllocation(estate, claimers);
-		RuleCalculator.uniformRandomAllocation(estate, claimers);
-	}
-	
-	/**
-	 * Calculate every rule allocation for each coalition.
-	 * @param List of coalitions.
-	 */
-	private static void calculateCoalitionRuleAllocations(List<Coalition> coalitions, boolean isVersionB)
-	{
-		RuleCalculator.calculateCoalitionProportionalAllocation(coalitions, isVersionB);
-		RuleCalculator.calculateCoalitionCEAAllocation(coalitions, isVersionB);
-		RuleCalculator.calculateCoalitionCELAllocation(coalitions, isVersionB);
-		RuleCalculator.calculateCoalitionAdjustedProportionalAllocation(coalitions, isVersionB);
-		RuleCalculator.calculateCoalitionShapleyAllocation(coalitions, isVersionB);
-		RuleCalculator.calculateCoalitionTalmudAllocation(coalitions, isVersionB);
-		RuleCalculator.calculateCoalitionMinimalOverlappingAllocation(coalitions, isVersionB);
-		RuleCalculator.calculateCoalitionClightsAllocation(coalitions, isVersionB);
-		RuleCalculator.calculateCoalitionEqualAllocation(coalitions, isVersionB);
-		RuleCalculator.calculateCoalitionUniformRandomAllocation(coalitions, isVersionB);
-	}
-	
 	// update the claims of every claimer in the coalition lists
 	/**
 	 * Updates the claims of every claimer in each coalition's claimer list.
@@ -613,23 +565,6 @@ public class SimulationPanel extends JPanel
 		estateFunctionMin.setEditable(true);
 		estateFunctionMax.setEditable(true);
 		runButton.setEnabled(true);		
-	}
-	
-	/**
-	 * Simple button template.
-	 * @param String text of the JButton.
-	 * @return A JButton created with the specific customizations.
-	 */
-	private static JButton createSimpleButton(String text) 
-	{
-		  JButton button = new JButton(text);
-		  button.setForeground(Color.BLACK);
-		  button.setBackground(Color.WHITE);
-		  Border line = new LineBorder(Color.BLACK);
-		  Border margin = new EmptyBorder(5, 15, 5, 15);
-		  Border compound = new CompoundBorder(line, margin);
-		  button.setBorder(compound);
-		  return button;
 	}
 	
 	private void saveToFile(boolean versionB, String reference, int numAgents, double min, double max, int iterations) throws IOException

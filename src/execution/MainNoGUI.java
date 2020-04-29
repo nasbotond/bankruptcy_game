@@ -4,10 +4,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import bankruptcy_code.Claimer;
 import bankruptcy_code.Coalition;
@@ -16,7 +21,8 @@ import bankruptcy_code.CustomMathOperations;
 import bankruptcy_code.RankCalculator;
 import bankruptcy_code.RuleCalculator;
 
-public class MainNoGUI 
+@SuppressWarnings("serial")
+public class MainNoGUI extends CalculationPanel
 {
 	static String propData;
 	static String ceaData;
@@ -69,8 +75,10 @@ public class MainNoGUI
 		
 		for(LinkedList<Claimer> entry : powerSet)
 		{
-			coalitions.add(new Coalition(entry));
+			coalitions.add(new Coalition(entry));			
 		}
+		
+		List<Coalition> orderedList = orderCoalitions(coalitions);
 		
 		double maximumSRD = (((coalitions.size()-1)*(coalitions.size() - 1)) / 2);
 		
@@ -78,8 +86,9 @@ public class MainNoGUI
 							(RuleCalculator.sum(claimers, "claims") * Double.parseDouble(args[2])));
 		
 		calculateClaimerRuleAllocations(estate, claimers);
-		RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, true);
-		RuleCalculator.calculateShapleyValues(estate, claimers, coalitions, true);		
+		// RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, true);
+		// RuleCalculator.calculateShapleyValues(estate, claimers, coalitions, true);	
+		RuleCalculator.shap(estate, claimers, coalitions, true);
 		calculateCoalitionRuleAllocations(coalitions, true);	
 		RuleCalculator.calculateReference("characteristic function", coalitions);
 		
@@ -138,8 +147,9 @@ public class MainNoGUI
 			updateCoalitionClaimers(coalitions, claimers);
 			
 			calculateClaimerRuleAllocations(estate, claimers);
-			RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, true);
-			RuleCalculator.calculateShapleyValues(estate, claimers, coalitions, true);		
+			// RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, true);
+			// RuleCalculator.calculateShapleyValues(estate, claimers, coalitions, true);	
+			RuleCalculator.shap(estate, claimers, coalitions, true);
 			calculateCoalitionRuleAllocations(coalitions, true);	
 			RuleCalculator.calculateReference("characteristic function", coalitions);
 			
@@ -215,6 +225,7 @@ public class MainNoGUI
 	 * @param List of CoalitionWithRankingDifference.
 	 * @return Sum as a double.
 	 */
+	/*
 	private static double sumRankingDifferences(List<CoalitionWithRankingDifference> input)
 	{
 		double sum = 0.0;
@@ -224,12 +235,13 @@ public class MainNoGUI
 		}
 		return sum;
 	}
-	
+	*/
 	/**
 	 * Calculate every rule allocation for each claimer.
 	 * @param Estate.
 	 * @param List of claimers.
 	 */
+	/*
 	private static void calculateClaimerRuleAllocations(double estate, List<Claimer> claimers)
 	{
 		RuleCalculator.proportionalRuleAllocation(estate, claimers);
@@ -242,11 +254,12 @@ public class MainNoGUI
 		RuleCalculator.equalAllocation(estate, claimers);
 		RuleCalculator.uniformRandomAllocation(estate, claimers);
 	}
-	
+	*/
 	/**
 	 * Calculate every rule allocation for each coalition.
 	 * @param List of coalitions.
 	 */
+	/*
 	private static void calculateCoalitionRuleAllocations(List<Coalition> coalitions, boolean isVersionB)
 	{
 		RuleCalculator.calculateCoalitionProportionalAllocation(coalitions, isVersionB);
@@ -260,7 +273,7 @@ public class MainNoGUI
 		RuleCalculator.calculateCoalitionEqualAllocation(coalitions, isVersionB);
 		RuleCalculator.calculateCoalitionUniformRandomAllocation(coalitions, isVersionB);
 	}
-	
+	*/
 	// update the claims of every claimer in the coalition lists
 	/**
 	 * Updates the claims of every claimer in each coalition's claimer list.
@@ -309,5 +322,40 @@ public class MainNoGUI
 	 
 		fw.close();
 	}
+	/*
+	private static List<Coalition> orderCoalitions(List<Coalition> coalitions)
+	{
+		HashMap<Coalition, Integer> coalitionInt = new HashMap<Coalition, Integer>();
+		
+		for(Coalition coalition : coalitions)
+		{
+			int sum = 0;
+			for(Claimer claimer : coalition.getClaimers())
+			{
+				sum += (int) Math.pow(2, ((claimer.getId())-97));
+			}
+			coalitionInt.put(coalition, sum);
+		}
+		Map<Coalition, Integer> sorted = sortByValue(coalitionInt);
+		List<Coalition> sortedList = new ArrayList<Coalition>();
+		for(Map.Entry<Coalition, Integer> entry : sorted.entrySet())
+		{
+			sortedList.add(entry.getKey());
+		}
+		return sortedList;
+	}
+	
+    public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) 
+    {
+        List<Entry<K, V>> list = new ArrayList<>(map.entrySet());
+        list.sort(Entry.comparingByValue());
 
+        Map<K, V> result = new LinkedHashMap<>();
+        for (Entry<K, V> entry : list) {
+            result.put(entry.getKey(), entry.getValue());
+        }
+
+        return result;
+    }
+    */
 }

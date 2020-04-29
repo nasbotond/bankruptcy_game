@@ -8,14 +8,8 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -29,11 +23,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.border.Border;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
-
 import bankruptcy_code.Claimer;
 import bankruptcy_code.Coalition;
 import bankruptcy_code.CoalitionWithRankingDifference;
@@ -43,7 +32,7 @@ import bankruptcy_code.RuleCalculator;
 import exceptions.InvalidEstateException;
 
 @SuppressWarnings("serial")
-public class ExactCalculationPanel extends JPanel 
+public class ExactCalculationPanel extends CalculationPanel 
 {
 	private JTextField estate;
 	
@@ -80,7 +69,7 @@ public class ExactCalculationPanel extends JPanel
 		
 		creditorsComboPanel = new JPanel();
 		creditorsComboPanel.setBackground(Color.WHITE);
-		Integer[] creditorNumber = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+		Integer[] creditorNumber = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22};
 		numCreditorsCombo = new JComboBox<Integer>(creditorNumber);
 		numCreditorsCombo.setFont(new Font("Serif", Font.PLAIN, 18));
 		numCreditorsCombo.setBackground(Color.WHITE);
@@ -168,7 +157,7 @@ public class ExactCalculationPanel extends JPanel
 		
 		consolePanel = new JPanel(new BorderLayout());
 		consolePanel.setBackground(Color.WHITE);						
-		consoleOutput = new JTextArea(29, 60);
+		consoleOutput = new JTextArea(24, 60); //29, 60
 		consoleOutput.setEditable(false);
 		JScrollPane scrollPane = new JScrollPane(consoleOutput);	
 		/*
@@ -283,28 +272,34 @@ public class ExactCalculationPanel extends JPanel
 				powerSet.addAll((Collection<? extends LinkedList<Claimer>>) CustomMathOperations.combination(claimers, i));
 			}
 			
-			List<Coalition> coalitions = new ArrayList<Coalition>(); // master list of coalitions
+			List<Coalition> coalitionsUnordered = new ArrayList<Coalition>(); // master list of coalitions
 			
 			for(LinkedList<Claimer> entry : powerSet)
 			{
-				coalitions.add(new Coalition(entry));
+				coalitionsUnordered.add(new Coalition(entry));
 			}
 			
+			List<Coalition> coalitions = orderCoalitions(coalitionsUnordered);
+			
 			calculateClaimerRuleAllocations(estateInput, claimers);
-			RuleCalculator.calculateCharacteristicFunction(estateInput, coalitions, claimers, isVersionB);
-			// long startTime = System.nanoTime();
-			RuleCalculator.calculateShapleyValues(estateInput, claimers, coalitions, isVersionB); // also calculates the characteristic function
-			/*
+			// RuleCalculator.calculateCharacteristicFunction(estateInput, coalitions, claimers, isVersionB);
+			long startTime = System.nanoTime();
+			// RuleCalculator.calculateShapleyValues(estateInput, claimers, coalitions, isVersionB); // also calculates the characteristic function
+			RuleCalculator.shap(estateInput, claimers, coalitions, isVersionB);
+			
+			// RuleCalculator.calculateCharacteristicFunction(estateInput, coalitions, claimers, isVersionB);
+			
 			long endTime = System.nanoTime();
 			long elapsedTime = endTime - startTime;
-			System.out.println(elapsedTime);
+			// System.out.println(elapsedTime);
 			System.out.println("shap time: " + ((double) elapsedTime/1_000_000_000) + " seconds");
-			*/
+			
 			calculateCoalitionRuleAllocations(coalitions, isVersionB);
 			RuleCalculator.calculateReference(referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()), coalitions);
-			
+			// coalitions.remove(coalitions.size() - 1); // TODO
 			// RuleCalculator.calculateReferenceOLD(estateInput, coalitions, claimers, isVersionB);
-			
+			long startTimeRank = System.nanoTime();
+			System.out.println("Starting ranking...");
 			List<CoalitionWithRankingDifference> ref = RankCalculator.rankingBasedOnReference(coalitions);
 			List<CoalitionWithRankingDifference> prop = RankCalculator.rankingBasedOnProportionalAllocation(coalitions);
 			List<CoalitionWithRankingDifference> cea = RankCalculator.rankingBasedOnCEAAllocation(coalitions);
@@ -328,7 +323,11 @@ public class ExactCalculationPanel extends JPanel
 			RankCalculator.compareRanks(cli, ref);
 			RankCalculator.compareRanks(eq, ref);
 			RankCalculator.compareRanks(unirand, ref);
-			
+
+			long endTimeRank = System.nanoTime();
+			long elapsedTimeRank = endTimeRank - startTimeRank;
+			// System.out.println(elapsedTimeRank);
+			System.out.println("ranking time: " + ((double) elapsedTimeRank/1_000_000_000) + " seconds");
 			FileWriter fw;
 			try
 			{
@@ -539,6 +538,7 @@ public class ExactCalculationPanel extends JPanel
 		}		
 	}
 	
+	@SuppressWarnings("unused")
 	private static void print(List<Claimer> list1, List<Coalition> list2)
 	{	
 		System.out.println("Claimers");
@@ -558,55 +558,6 @@ public class ExactCalculationPanel extends JPanel
 			+ " CLI: " + entry.getClightsAllocation() + " EQ: " + entry.getEqualAllocation() + " UNIRAND: " + entry.getUniformRandomAllocation());
 		}
 		System.out.println();
-	}
-	
-	private static double sumRankingDifferences(List<CoalitionWithRankingDifference> input)
-	{
-		double sum = 0.0;
-		for(CoalitionWithRankingDifference coalition : input)
-		{
-			sum += coalition.getRankingDifference();
-		}
-		return sum;
-	}
-	
-	private static void calculateClaimerRuleAllocations(double estate, List<Claimer> claimers)
-	{
-		RuleCalculator.proportionalRuleAllocation(estate, claimers);
-		RuleCalculator.CEARuleAllocation(estate, claimers);
-		RuleCalculator.CELRuleAllocation(estate, claimers);
-		RuleCalculator.adjustedProportionalAllocation(estate, claimers);
-		RuleCalculator.talmudRuleAllocation(estate, claimers);
-		RuleCalculator.clightsRuleAllocation(estate, claimers);
-		RuleCalculator.minimalOverlappingRuleAllocation(estate, claimers);
-		RuleCalculator.equalAllocation(estate, claimers);
-		RuleCalculator.uniformRandomAllocation(estate, claimers);
-	}
-	
-	private static void calculateCoalitionRuleAllocations(List<Coalition> coalitions, boolean isVersionB)
-	{
-		RuleCalculator.calculateCoalitionProportionalAllocation(coalitions, isVersionB);
-		RuleCalculator.calculateCoalitionCEAAllocation(coalitions, isVersionB);
-		RuleCalculator.calculateCoalitionCELAllocation(coalitions, isVersionB);
-		RuleCalculator.calculateCoalitionAdjustedProportionalAllocation(coalitions, isVersionB);
-		RuleCalculator.calculateCoalitionShapleyAllocation(coalitions, isVersionB);
-		RuleCalculator.calculateCoalitionTalmudAllocation(coalitions, isVersionB);
-		RuleCalculator.calculateCoalitionMinimalOverlappingAllocation(coalitions, isVersionB);
-		RuleCalculator.calculateCoalitionClightsAllocation(coalitions, isVersionB);
-		RuleCalculator.calculateCoalitionEqualAllocation(coalitions, isVersionB);
-		RuleCalculator.calculateCoalitionUniformRandomAllocation(coalitions, isVersionB);
-	}
-	
-	private static JButton createSimpleButton(String text) 
-	{
-		  JButton button = new JButton(text);
-		  button.setForeground(Color.BLACK);
-		  button.setBackground(Color.WHITE);
-		  Border line = new LineBorder(Color.BLACK);
-		  Border margin = new EmptyBorder(5, 15, 5, 15);
-		  Border compound = new CompoundBorder(line, margin);
-		  button.setBorder(compound);
-		  return button;
 	}
 	
 	private static void writeToConsoleAndFile(JTextArea area, FileWriter fw, String string) throws IOException

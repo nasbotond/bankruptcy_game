@@ -12,17 +12,20 @@ public class RankCalculator
 	
 	public static List<CoalitionWithRankingDifference> rankingBasedOnReference(List<Coalition> coalitions)
 	{
+		/*
 		List<Coalition> copyWithoutFullCoalition = new ArrayList<Coalition>(coalitions);
 		
 		copyWithoutFullCoalition.remove(coalitions.size() - 1);
+		*/
+		// coalitions.remove(coalitions.size() - 1);
 		
 		List<CoalitionWithRankingDifference> coalitionsRanked = new ArrayList<CoalitionWithRankingDifference>();
 		
-		for(Coalition coalitionFirst : copyWithoutFullCoalition)
+		for(Coalition coalitionFirst : coalitions) // OLD: copyWithoutFullCoalition
 		{
 			double r = 1.0, s = 1.0;
 			
-			for(Coalition coalitionSecond : copyWithoutFullCoalition)
+			for(Coalition coalitionSecond : coalitions)
 			{
 				if(!coalitionFirst.equals(coalitionSecond) && coalitionFirst.getReference() > coalitionSecond.getReference())
 				{
@@ -42,17 +45,20 @@ public class RankCalculator
 	
 	public static List<CoalitionWithRankingDifference> rankingBasedOnProportionalAllocation(List<Coalition> coalitions)
 	{
+		/*
 		List<Coalition> copyWithoutFullCoalition = new ArrayList<Coalition>(coalitions);
 		
 		copyWithoutFullCoalition.remove(coalitions.size() - 1);
+		*/
+		// coalitions.remove(coalitions.size() - 1);
 		
 		List<CoalitionWithRankingDifference> coalitionsRanked = new ArrayList<CoalitionWithRankingDifference>();
 		
-		for(Coalition coalitionFirst : copyWithoutFullCoalition)
+		for(Coalition coalitionFirst : coalitions)
 		{
 			double r = 1.0, s = 1.0;
 			
-			for(Coalition coalitionSecond : copyWithoutFullCoalition)
+			for(Coalition coalitionSecond : coalitions)
 			{
 				if(!coalitionFirst.equals(coalitionSecond) && coalitionFirst.getProportionalAllocation() > coalitionSecond.getProportionalAllocation())
 				{
@@ -72,17 +78,20 @@ public class RankCalculator
 	
 	public static List<CoalitionWithRankingDifference> rankingBasedOnCEAAllocation(List<Coalition> coalitions)
 	{
+		/*
 		List<Coalition> copyWithoutFullCoalition = new ArrayList<Coalition>(coalitions);
 		
 		copyWithoutFullCoalition.remove(coalitions.size() - 1);
+		*/
+		// coalitions.remove(coalitions.size() - 1);
 		
 		List<CoalitionWithRankingDifference> coalitionsRanked = new ArrayList<CoalitionWithRankingDifference>();
 		
-		for(Coalition coalitionFirst : copyWithoutFullCoalition)
+		for(Coalition coalitionFirst : coalitions)
 		{
 			double r = 1.0, s = 1.0;
 			
-			for(Coalition coalitionSecond : copyWithoutFullCoalition)
+			for(Coalition coalitionSecond : coalitions)
 			{
 				if(!coalitionFirst.equals(coalitionSecond) && coalitionFirst.getCEAAllocation() > coalitionSecond.getCEAAllocation())
 				{
@@ -102,17 +111,20 @@ public class RankCalculator
 	
 	public static List<CoalitionWithRankingDifference> rankingBasedOnCELAllocation(List<Coalition> coalitions)
 	{
+		/*
 		List<Coalition> copyWithoutFullCoalition = new ArrayList<Coalition>(coalitions);
 		
 		copyWithoutFullCoalition.remove(coalitions.size() - 1);
+		*/
+		// coalitions.remove(coalitions.size() - 1);
 		
 		List<CoalitionWithRankingDifference> coalitionsRanked = new ArrayList<CoalitionWithRankingDifference>();
 		
-		for(Coalition coalitionFirst : copyWithoutFullCoalition)
+		for(Coalition coalitionFirst : coalitions)
 		{
 			double r = 1.0, s = 1.0;
 			
-			for(Coalition coalitionSecond : copyWithoutFullCoalition)
+			for(Coalition coalitionSecond : coalitions)
 			{
 				if(!coalitionFirst.equals(coalitionSecond) && coalitionFirst.getCELAllocation() > coalitionSecond.getCELAllocation())
 				{
@@ -132,17 +144,20 @@ public class RankCalculator
 	
 	public static List<CoalitionWithRankingDifference> rankingBasedOnAdjustedProportionalAllocation(List<Coalition> coalitions)
 	{
+		/*
 		List<Coalition> copyWithoutFullCoalition = new ArrayList<Coalition>(coalitions);
 		
 		copyWithoutFullCoalition.remove(coalitions.size() - 1);
+		*/
+		// coalitions.remove(coalitions.size() - 1);
 		
 		List<CoalitionWithRankingDifference> coalitionsRanked = new ArrayList<CoalitionWithRankingDifference>();
 		
-		for(Coalition coalitionFirst : copyWithoutFullCoalition)
+		for(Coalition coalitionFirst : coalitions)
 		{
 			double r = 1.0, s = 1.0;
 			
-			for(Coalition coalitionSecond : copyWithoutFullCoalition)
+			for(Coalition coalitionSecond : coalitions)
 			{
 				if(!coalitionFirst.equals(coalitionSecond) && coalitionFirst.getAdjustedProportionalAllocation() > coalitionSecond.getAdjustedProportionalAllocation())
 				{
@@ -162,17 +177,20 @@ public class RankCalculator
 	
 	public static List<CoalitionWithRankingDifference> rankingBasedOnShapleyAllocation(List<Coalition> coalitions)
 	{
+		/*
 		List<Coalition> copyWithoutFullCoalition = new ArrayList<Coalition>(coalitions);
 		
 		copyWithoutFullCoalition.remove(coalitions.size() - 1);
+		*/
+		// coalitions.remove(coalitions.size() - 1);
 		
 		List<CoalitionWithRankingDifference> coalitionsRanked = new ArrayList<CoalitionWithRankingDifference>();
 		
-		for(Coalition coalitionFirst : copyWithoutFullCoalition)
+		for(Coalition coalitionFirst : coalitions)
 		{
 			double r = 1.0, s = 1.0;
 			
-			for(Coalition coalitionSecond : copyWithoutFullCoalition)
+			for(Coalition coalitionSecond : coalitions)
 			{
 				if(!coalitionFirst.equals(coalitionSecond) && coalitionFirst.getShapleyValueAllocation() > coalitionSecond.getShapleyValueAllocation())
 				{
@@ -192,17 +210,20 @@ public class RankCalculator
 	
 	public static List<CoalitionWithRankingDifference> rankingBasedOnTalmudAllocation(List<Coalition> coalitions)
 	{
+		/*
 		List<Coalition> copyWithoutFullCoalition = new ArrayList<Coalition>(coalitions);
 		
 		copyWithoutFullCoalition.remove(coalitions.size() - 1);
+		*/
+		// coalitions.remove(coalitions.size() - 1);
 		
 		List<CoalitionWithRankingDifference> coalitionsRanked = new ArrayList<CoalitionWithRankingDifference>();
 		
-		for(Coalition coalitionFirst : copyWithoutFullCoalition)
+		for(Coalition coalitionFirst : coalitions)
 		{
 			double r = 1.0, s = 1.0;
 			
-			for(Coalition coalitionSecond : copyWithoutFullCoalition)
+			for(Coalition coalitionSecond : coalitions)
 			{
 				if(!coalitionFirst.equals(coalitionSecond) && coalitionFirst.getTalmudAllocation() > coalitionSecond.getTalmudAllocation())
 				{
@@ -222,17 +243,20 @@ public class RankCalculator
 	
 	public static List<CoalitionWithRankingDifference> rankingBasedOnMinimalOverlappingAllocation(List<Coalition> coalitions)
 	{
+		/*
 		List<Coalition> copyWithoutFullCoalition = new ArrayList<Coalition>(coalitions);
 		
 		copyWithoutFullCoalition.remove(coalitions.size() - 1);
+		*/
+		// coalitions.remove(coalitions.size() - 1);
 		
 		List<CoalitionWithRankingDifference> coalitionsRanked = new ArrayList<CoalitionWithRankingDifference>();
 		
-		for(Coalition coalitionFirst : copyWithoutFullCoalition)
+		for(Coalition coalitionFirst : coalitions)
 		{
 			double r = 1.0, s = 1.0;
 			
-			for(Coalition coalitionSecond : copyWithoutFullCoalition)
+			for(Coalition coalitionSecond : coalitions)
 			{
 				if(!coalitionFirst.equals(coalitionSecond) && coalitionFirst.getMinimalOverlappingAllocation() > coalitionSecond.getMinimalOverlappingAllocation())
 				{
@@ -252,17 +276,20 @@ public class RankCalculator
 	
 	public static List<CoalitionWithRankingDifference> rankingBasedOnClightsAllocation(List<Coalition> coalitions)
 	{
+		/*
 		List<Coalition> copyWithoutFullCoalition = new ArrayList<Coalition>(coalitions);
 		
 		copyWithoutFullCoalition.remove(coalitions.size() - 1);
+		*/
+		// coalitions.remove(coalitions.size() - 1);
 		
 		List<CoalitionWithRankingDifference> coalitionsRanked = new ArrayList<CoalitionWithRankingDifference>();
 		
-		for(Coalition coalitionFirst : copyWithoutFullCoalition)
+		for(Coalition coalitionFirst : coalitions)
 		{
 			double r = 1.0, s = 1.0;
 			
-			for(Coalition coalitionSecond : copyWithoutFullCoalition)
+			for(Coalition coalitionSecond : coalitions)
 			{
 				if(!coalitionFirst.equals(coalitionSecond) && coalitionFirst.getClightsAllocation() > coalitionSecond.getClightsAllocation())
 				{
@@ -282,17 +309,20 @@ public class RankCalculator
 	
 	public static List<CoalitionWithRankingDifference> rankingBasedOnEqualAllocation(List<Coalition> coalitions)
 	{
+		/*
 		List<Coalition> copyWithoutFullCoalition = new ArrayList<Coalition>(coalitions);
 		
 		copyWithoutFullCoalition.remove(coalitions.size() - 1);
+		*/
+		// coalitions.remove(coalitions.size() - 1);
 		
 		List<CoalitionWithRankingDifference> coalitionsRanked = new ArrayList<CoalitionWithRankingDifference>();
 		
-		for(Coalition coalitionFirst : copyWithoutFullCoalition)
+		for(Coalition coalitionFirst : coalitions)
 		{
 			double r = 1.0, s = 1.0;
 			
-			for(Coalition coalitionSecond : copyWithoutFullCoalition)
+			for(Coalition coalitionSecond : coalitions)
 			{
 				if(!coalitionFirst.equals(coalitionSecond) && coalitionFirst.getEqualAllocation() > coalitionSecond.getEqualAllocation())
 				{
@@ -312,17 +342,20 @@ public class RankCalculator
 	
 	public static List<CoalitionWithRankingDifference> rankingBasedOnUniformRandomAllocation(List<Coalition> coalitions)
 	{
+		/*
 		List<Coalition> copyWithoutFullCoalition = new ArrayList<Coalition>(coalitions);
 		
 		copyWithoutFullCoalition.remove(coalitions.size() - 1);
+		*/
+		// coalitions.remove(coalitions.size() - 1);
 		
 		List<CoalitionWithRankingDifference> coalitionsRanked = new ArrayList<CoalitionWithRankingDifference>();
 		
-		for(Coalition coalitionFirst : copyWithoutFullCoalition)
+		for(Coalition coalitionFirst : coalitions)
 		{
 			double r = 1.0, s = 1.0;
 			
-			for(Coalition coalitionSecond : copyWithoutFullCoalition)
+			for(Coalition coalitionSecond : coalitions)
 			{
 				if(!coalitionFirst.equals(coalitionSecond) && coalitionFirst.getUniformRandomAllocation() > coalitionSecond.getUniformRandomAllocation())
 				{
@@ -345,7 +378,8 @@ public class RankCalculator
 	{
 		for(CoalitionWithRankingDifference coalition : coalitions)
 		{
-			double referenceRank = 0.0;
+			/*
+			double referenceRank = 0.0;			
 			
 			for(CoalitionWithRankingDifference referenceCoalition : reference) // find the reference rank of this coalition
 			{
@@ -354,7 +388,8 @@ public class RankCalculator
 					referenceRank = referenceCoalition.getRank();
 				}
 			}
-			coalition.setRankingDifference(Math.abs(coalition.getRank() - referenceRank));
+			*/
+			coalition.setRankingDifference(Math.abs(coalition.getRank() - reference.get(coalitions.indexOf(coalition)).getRank()));
 		}
 	}
 

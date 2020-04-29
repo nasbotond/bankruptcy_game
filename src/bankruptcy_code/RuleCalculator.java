@@ -1,6 +1,7 @@
 package bankruptcy_code;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -13,6 +14,7 @@ public class RuleCalculator
 		
 	}
 	
+	/*
 	// calculates the Shapley values of the claimers and puts them in a double array
 	public static double[] calculateShapleyValues(double estate, List<Claimer> claimers, List<Coalition> coalitions, boolean isVersionB)
 	{
@@ -72,6 +74,83 @@ public class RuleCalculator
 		}
 		
 		return shapleys;
+	}
+	*/ 
+	
+	public static double[] shap(double estate, List<Claimer> claimers, List<Coalition> coalitions, boolean isVersionB)
+	{
+		int n = claimers.size();		
+		double[] v = calculateCharacteristicFunction(estate, coalitions, claimers, isVersionB);
+		double N = n;
+		double[] w = new double[n];
+		Arrays.fill(w, 0);
+		w[0] = 1/N;
+		int[] expo = new int[n];
+		Arrays.fill(expo, 1);
+		for(int j = 1; j < n; j++)
+		{
+			w[j] = w[j-1] * j / (n - j);
+			expo[j] = (int) Math.pow(2, j);
+		}
+		int s = 2 * expo[n - 1] - 2;
+		// get array v
+		double[] shapl = new double[n];
+		Arrays.fill(shapl, 0);
+		boolean[] a = new boolean[n];
+		Arrays.fill(a,  false);		
+		for(int i = 0; i < n - 1; i++)
+		{
+			shapl[i] = v[expo[i] - 1] / n;
+		}
+		for(int i = 0; i < s; i++)
+		{
+			// int k = 0;
+			Arrays.fill(a, false);
+			int k = de2bi_card(i, a, n);
+			for(int j = 0; j < n - 1; j++)
+			{
+				if(!a[j])
+				{
+					shapl[j] += w[k] * (v[i + expo[j]] - v[i]);
+				}
+			}
+		}
+		shapl[n - 1] = v[s];
+		for(int j = 0; j < n - 1; j++)
+		{
+			shapl[n-1] -= shapl[j];
+		}
+		
+		for(int j = 0; j < shapl.length; j++)
+		{
+			claimers.get(j).setShapleyValue(shapl[j]); // and update the Shapley value field for each claimer in the input list
+		}
+		
+		return shapl;
+	}
+	
+	private static int de2bi_card(int i, boolean[] a, int n)
+	{
+		int k = 0;
+		int x = 2;
+		for(int c = 0; c < n-2; c++)
+		{
+			x += x;
+		}
+		int j = i + 1;
+		int l = n - 1;
+		while(j > 0)
+		{
+			if(j >= x)
+			{
+				a[l] = true;
+				k = k + 1;
+				j -= x;
+			}
+			x /= 2;
+			l--;
+		}
+		return k;
 	}
 	
 	// returns the amount obligated to a given agent based on parameters
@@ -525,15 +604,17 @@ public class RuleCalculator
 		}
 	}
 	
-	public static void calculateCharacteristicFunction(double estate, List<Coalition> coalitions, List<Claimer> claimers, boolean isVersionB)
+	public static double[] calculateCharacteristicFunction(double estate, List<Coalition> coalitions, List<Claimer> claimers, boolean isVersionB)
 	{
 		double sumOfAllClaims = sum(claimers, "claims");
-		
+		double[] v = new double[coalitions.size()];
 		for(Coalition entry : coalitions)
 		{
 			double sumCurrentCoalition = sum(entry.getClaimers(), "claims");			
 			
 			double maxUpperBound = estate - (sumOfAllClaims - sumCurrentCoalition);
+			v[coalitions.indexOf(entry)] = Math.max(0, maxUpperBound);	
+			
 			if(isVersionB)
 			{
 				entry.setCharacteristicFunction(Math.max(0, maxUpperBound)/entry.getClaimers().size());
@@ -543,7 +624,7 @@ public class RuleCalculator
 				entry.setCharacteristicFunction(Math.max(0, maxUpperBound));
 			}			
 		}
-		
+		return v;
 	}
 	
 	/*
