@@ -30,6 +30,7 @@ import bankruptcy_code.Claimer;
 import bankruptcy_code.Coalition;
 import bankruptcy_code.CoalitionWithRankingDifference;
 import bankruptcy_code.CustomMathOperations;
+import bankruptcy_code.IndependentCoalitionCalculation;
 import bankruptcy_code.RankCalculator;
 import bankruptcy_code.RuleCalculator;
 
@@ -302,7 +303,6 @@ public class SimulationPanel extends CalculationPanel
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void calculateAverageSRD(boolean isVersionB)
 	{
 		final int numClaimers = Integer.parseInt(numberOfCreditors.getText());
@@ -331,22 +331,9 @@ public class SimulationPanel extends CalculationPanel
 		{
 			claimers.add(new Claimer((char)(97 + i), CustomMathOperations.generateUniformRandom(0, 1000)));
 		}
-		
-		List<LinkedList<Claimer>> powerSet = new LinkedList<LinkedList<Claimer>>();
-		
-		for(int i = 1; i <= claimers.size(); i++)
-		{
-			powerSet.addAll((Collection<? extends LinkedList<Claimer>>) CustomMathOperations.combination(claimers, i));
-		}
-		
-		List<Coalition> coalitionsUnordered = new ArrayList<Coalition>(); // master list of coalitions
-		
-		for(LinkedList<Claimer> entry : powerSet)
-		{
-			coalitionsUnordered.add(new Coalition(entry));
-		}
-		
-		List<Coalition> coalitions = orderCoalitions(coalitionsUnordered);
+
+		List<Coalition> allCoalitions = getAllCoalitions(claimers);
+		List<Coalition> coalitions = getIndependentCoalitions(numClaimers, claimers);
 		
 		double maximumSRD = (((coalitions.size()-1)*(coalitions.size() - 1)) / 2);
 		maximumDiffLabel.setText("Maximum: 1.0");
@@ -355,15 +342,12 @@ public class SimulationPanel extends CalculationPanel
 							(RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMax.getText())));
 		
 		calculateClaimerRuleAllocations(estate, claimers);
-		// RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, isVersionB);
-		// RuleCalculator.calculateShapleyValues(estate, claimers, coalitions, isVersionB);	
-		RuleCalculator.shap(estate, claimers, coalitions, isVersionB);
+		RuleCalculator.shap(estate, claimers, allCoalitions, isVersionB);
 		
-		// RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, isVersionB); // needs to be called after shapley (because shapley calls same method as version A every time)
+		RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, isVersionB); // needs to be called after shapley (because shapley calls same method as version A every time)
 		
 		calculateCoalitionRuleAllocations(coalitions, isVersionB);	
 		RuleCalculator.calculateReference(referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()), coalitions);
-		// coalitions.remove(coalitions.size() - 1); // TODO
 		// print(claimers, coalitions);
 		// long startTime = System.nanoTime();
 		ref = RankCalculator.rankingBasedOnReference(coalitions);
@@ -421,12 +405,15 @@ public class SimulationPanel extends CalculationPanel
 
 			iterations = iterations + 1;			
 			
-			updateCoalitionClaimers(coalitions, claimers);
+			updateCoalitionClaimers(allCoalitions, claimers); // update all coalitions with the new claims
+			
+			coalitions = getIndependentCoalitions(numClaimers, claimers);
 			
 			calculateClaimerRuleAllocations(estate, claimers);
 			// RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, isVersionB);
 			// RuleCalculator.calculateShapleyValues(estate, claimers, coalitions, isVersionB);
-			RuleCalculator.shap(estate, claimers, coalitions, isVersionB);
+			RuleCalculator.shap(estate, claimers, allCoalitions, isVersionB);
+			RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, isVersionB);
 			calculateCoalitionRuleAllocations(coalitions, isVersionB);	
 			RuleCalculator.calculateReference(referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()), coalitions);
 			

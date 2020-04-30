@@ -27,6 +27,7 @@ import bankruptcy_code.Claimer;
 import bankruptcy_code.Coalition;
 import bankruptcy_code.CoalitionWithRankingDifference;
 import bankruptcy_code.CustomMathOperations;
+import bankruptcy_code.IndependentCoalitionCalculation;
 import bankruptcy_code.RankCalculator;
 import bankruptcy_code.RuleCalculator;
 import exceptions.InvalidEstateException;
@@ -265,34 +266,21 @@ public class ExactCalculationPanel extends CalculationPanel
 		
 		if(estateInput <= sumOfClaims)
 		{
-			List<LinkedList<Claimer>> powerSet = new LinkedList<LinkedList<Claimer>>();
-			
-			for(int i = 1; i <= claimers.size(); i++)
-			{
-				powerSet.addAll((Collection<? extends LinkedList<Claimer>>) CustomMathOperations.combination(claimers, i));
-			}
-			
-			List<Coalition> coalitionsUnordered = new ArrayList<Coalition>(); // master list of coalitions
-			
-			for(LinkedList<Claimer> entry : powerSet)
-			{
-				coalitionsUnordered.add(new Coalition(entry));
-			}
-			
-			List<Coalition> coalitions = orderCoalitions(coalitionsUnordered);
+			List<Coalition> allCoalitions = getAllCoalitions(claimers);
+			List<Coalition> coalitions = getIndependentCoalitions(claimers.size(), claimers);
 			
 			calculateClaimerRuleAllocations(estateInput, claimers);
 			// RuleCalculator.calculateCharacteristicFunction(estateInput, coalitions, claimers, isVersionB);
 			long startTime = System.nanoTime();
 			// RuleCalculator.calculateShapleyValues(estateInput, claimers, coalitions, isVersionB); // also calculates the characteristic function
-			RuleCalculator.shap(estateInput, claimers, coalitions, isVersionB);
+			RuleCalculator.shap(estateInput, claimers, allCoalitions, isVersionB);
 			
-			// RuleCalculator.calculateCharacteristicFunction(estateInput, coalitions, claimers, isVersionB);
+			RuleCalculator.calculateCharacteristicFunction(estateInput, coalitions, claimers, isVersionB);
 			
 			long endTime = System.nanoTime();
 			long elapsedTime = endTime - startTime;
 			// System.out.println(elapsedTime);
-			System.out.println("shap time: " + ((double) elapsedTime/1_000_000_000) + " seconds");
+			System.out.println("shap total time: " + ((double) elapsedTime/1_000_000_000) + " seconds");
 			
 			calculateCoalitionRuleAllocations(coalitions, isVersionB);
 			RuleCalculator.calculateReference(referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()), coalitions);
@@ -452,85 +440,6 @@ public class ExactCalculationPanel extends CalculationPanel
 			{
 				ex.printStackTrace();
 			}
-			
-			/*
-			if(isVersionB)
-			{
-				System.out.println("VERSION B");
-			}
-			else
-			{
-				System.out.println("VERSION A");
-			}			
-			
-			print(claimers, coalitions);
-			
-			for(CoalitionWithRankingDifference entry : ref)
-			{
-				System.out.println("REF   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank());
-			}
-			System.out.println();
-			
-			for(CoalitionWithRankingDifference entry : prop)
-			{
-				System.out.println("PROP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
-			}
-			System.out.println("\nsum of PROP ranking differences : " + sumRankingDifferences(prop) + "\n");
-			
-			for(CoalitionWithRankingDifference entry : cea)
-			{
-				System.out.println("CEA   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
-			}
-			System.out.println("\nsum of CEA ranking differences : " + sumRankingDifferences(cea)+ "\n");
-			
-			for(CoalitionWithRankingDifference entry : cel)
-			{
-				System.out.println("CEL   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
-			}
-			System.out.println("\nsum of CEL ranking differences : " + sumRankingDifferences(cel)+ "\n");
-			
-			for(CoalitionWithRankingDifference entry : aprop)
-			{
-				System.out.println("APROP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
-			}
-			System.out.println("\nsum of APROP ranking differences : " + sumRankingDifferences(aprop) + "\n");
-			
-			for(CoalitionWithRankingDifference entry : shap)
-			{
-				System.out.println("SHAP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
-			}	
-			System.out.println("\nsum of SHAP ranking differences : " + sumRankingDifferences(shap) + "\n");
-			
-			for(CoalitionWithRankingDifference entry : tal)
-			{
-				System.out.println("TAL   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
-			}
-			System.out.println("\nsum of TAL ranking differences : " + sumRankingDifferences(tal) + "\n");
-			
-			for(CoalitionWithRankingDifference entry : mo)
-			{
-				System.out.println("MO   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
-			}
-			System.out.println("\nsum of MO ranking differences : " + sumRankingDifferences(mo) + "\n");
-			
-			for(CoalitionWithRankingDifference entry : cli)
-			{
-				System.out.println("CLI   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
-			}
-			System.out.println("\nsum of CLI ranking differences : " + sumRankingDifferences(cli) + "\n");
-			
-			for(CoalitionWithRankingDifference entry : eq)
-			{
-				System.out.println("EQ   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
-			}
-			System.out.println("\nsum of EQ ranking differences : " + sumRankingDifferences(eq) + "\n");
-			
-			for(CoalitionWithRankingDifference entry : unirand)
-			{
-				System.out.println("UNIRAND   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference());
-			}
-			System.out.println("\nsum of UNIRAND ranking differences : " + sumRankingDifferences(unirand) + "\n");
-			*/
 		}
 		else
 		{

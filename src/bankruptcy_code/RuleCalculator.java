@@ -77,59 +77,60 @@ public class RuleCalculator
 	}
 	*/ 
 	
-	public static double[] shap(double estate, List<Claimer> claimers, List<Coalition> coalitions, boolean isVersionB)
+	public static ArrayList<Double> shap(double estate, List<Claimer> claimers, List<Coalition> coalitions, boolean isVersionB)
 	{
 		int n = claimers.size();		
-		double[] v = calculateCharacteristicFunction(estate, coalitions, claimers, isVersionB);
+		ArrayList<Double> v = calculateCharacteristicFunction(estate, coalitions, claimers, isVersionB);
+
+		long startTime = System.nanoTime();
 		double N = n;
-		double[] w = new double[n];
-		Arrays.fill(w, 0);
-		w[0] = 1/N;
-		int[] expo = new int[n];
-		Arrays.fill(expo, 1);
+		ArrayList<Double> w = new ArrayList<Double>(Collections.nCopies(n, 0.0));
+		w.set(0,  1/N);
+		ArrayList<Integer> expo = new ArrayList<Integer>(Collections.nCopies(n, 1));
 		for(int j = 1; j < n; j++)
 		{
-			w[j] = w[j-1] * j / (n - j);
-			expo[j] = (int) Math.pow(2, j);
+			w.set(j, w.get(j-1)*j / (n - j));
+			expo.set(j, (int) Math.pow(2, j));
 		}
-		int s = 2 * expo[n - 1] - 2;
+
+		int s = 2 * expo.get(n-1) - 2;
 		// get array v
-		double[] shapl = new double[n];
-		Arrays.fill(shapl, 0);
-		boolean[] a = new boolean[n];
-		Arrays.fill(a,  false);		
+		ArrayList<Double> shapl = new ArrayList<Double>(Collections.nCopies(n, 0.0));
+		ArrayList<Boolean> a = new ArrayList<Boolean>(Collections.nCopies(n, false));
 		for(int i = 0; i < n - 1; i++)
 		{
-			shapl[i] = v[expo[i] - 1] / n;
+			shapl.set(i, v.get(expo.get(i) - 1)/n);
 		}
 		for(int i = 0; i < s; i++)
 		{
 			// int k = 0;
-			Arrays.fill(a, false);
+			Collections.fill(a, false);
 			int k = de2bi_card(i, a, n);
 			for(int j = 0; j < n - 1; j++)
 			{
-				if(!a[j])
+				if(!a.get(j))
 				{
-					shapl[j] += w[k] * (v[i + expo[j]] - v[i]);
+					shapl.set(j, shapl.get(j) + w.get(k)*(v.get(i + expo.get(j)) - v.get(i)));
 				}
 			}
 		}
-		shapl[n - 1] = v[s];
+		shapl.set(n-1, v.get(s));
 		for(int j = 0; j < n - 1; j++)
 		{
-			shapl[n-1] -= shapl[j];
+			shapl.set(n-1, shapl.get(n-1) - shapl.get(j));
 		}
 		
-		for(int j = 0; j < shapl.length; j++)
+		for(int j = 0; j < shapl.size(); j++)
 		{
-			claimers.get(j).setShapleyValue(shapl[j]); // and update the Shapley value field for each claimer in the input list
+			claimers.get(j).setShapleyValue(shapl.get(j)); // and update the Shapley value field for each claimer in the input list
 		}
-		
+		long endTime = System.nanoTime();
+		long elapsedTime = endTime - startTime;
+		System.out.println("shap time: " + ((double) elapsedTime/1_000_000_000) + " seconds");
 		return shapl;
 	}
 	
-	private static int de2bi_card(int i, boolean[] a, int n)
+	private static int de2bi_card(int i, ArrayList<Boolean> a, int n)
 	{
 		int k = 0;
 		int x = 2;
@@ -143,7 +144,7 @@ public class RuleCalculator
 		{
 			if(j >= x)
 			{
-				a[l] = true;
+				a.set(l, true);
 				k = k + 1;
 				j -= x;
 			}
@@ -604,16 +605,16 @@ public class RuleCalculator
 		}
 	}
 	
-	public static double[] calculateCharacteristicFunction(double estate, List<Coalition> coalitions, List<Claimer> claimers, boolean isVersionB)
+	public static ArrayList<Double> calculateCharacteristicFunction(double estate, List<Coalition> coalitions, List<Claimer> claimers, boolean isVersionB)
 	{
 		double sumOfAllClaims = sum(claimers, "claims");
-		double[] v = new double[coalitions.size()];
+		ArrayList<Double> v = new ArrayList<Double>(Collections.nCopies(coalitions.size(), 0.0));
 		for(Coalition entry : coalitions)
 		{
 			double sumCurrentCoalition = sum(entry.getClaimers(), "claims");			
 			
 			double maxUpperBound = estate - (sumOfAllClaims - sumCurrentCoalition);
-			v[coalitions.indexOf(entry)] = Math.max(0, maxUpperBound);	
+			v.set(coalitions.indexOf(entry), Math.max(0, maxUpperBound));	
 			
 			if(isVersionB)
 			{
@@ -671,7 +672,7 @@ public class RuleCalculator
 		case("proportional rule"):
 			for(Coalition coalition : coalitions)
 			{
-				coalition.setReference(coalition.getCharacteristicFunction());
+				coalition.setReference(coalition.getProportionalAllocation());
 			}
 		break;
 		case("CEA rule"):

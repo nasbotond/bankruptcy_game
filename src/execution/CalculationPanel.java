@@ -2,8 +2,10 @@ package execution;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -18,11 +20,73 @@ import javax.swing.border.LineBorder;
 import bankruptcy_code.Claimer;
 import bankruptcy_code.Coalition;
 import bankruptcy_code.CoalitionWithRankingDifference;
+import bankruptcy_code.CustomMathOperations;
+import bankruptcy_code.IndependentCoalitionCalculation;
 import bankruptcy_code.RuleCalculator;
 
 @SuppressWarnings("serial")
 public abstract class CalculationPanel extends JPanel
 {
+	public static List<Coalition> getIndependentCoalitions(int n, List<Claimer> claimers)
+	{
+		ArrayList<Integer> ind_coal = IndependentCoalitionCalculation.findIndependentCoalitions(claimers.size());
+		
+		List<Coalition> coalitionsUnordered = new ArrayList<Coalition>(); // master list of coalitions
+		
+		for(Integer coalition : ind_coal)
+		{
+			List<Claimer> members = new ArrayList<Claimer>();
+			char[] bin = Integer.toBinaryString(coalition).toCharArray();
+			
+	        for (int i = 0; i < bin.length / 2; i++) // flip the array
+	        { 
+	            char t = bin[i]; 
+	            bin[i] = bin[bin.length - i - 1]; 
+	            bin[bin.length - i - 1] = t; 
+	        } 
+	        
+			for(int j = 0; j < bin.length; j++)
+			{
+				if(bin[j] == '1')
+				{
+					for(Claimer claimer : claimers)
+					{
+						if(claimer.getId() == (char)(97 + j))
+						{
+							members.add(claimer);
+						}
+					}
+				}
+			}
+			coalitionsUnordered.add(new Coalition(members));
+		}
+		
+		List<Coalition> coalitions = orderCoalitions(coalitionsUnordered);
+		
+		return coalitions;
+	}
+	
+	public static List<Coalition> getAllCoalitions(List<Claimer> claimers)
+	{
+		List<LinkedList<Claimer>> powerSet = new LinkedList<LinkedList<Claimer>>();
+		
+		for(int i = 1; i <= claimers.size(); i++)
+		{
+			powerSet.addAll((Collection<? extends LinkedList<Claimer>>) CustomMathOperations.combination(claimers, i));
+		}
+		
+		List<Coalition> allCoalitionsUnordered = new ArrayList<Coalition>(); // master list of coalitions
+		
+		for(LinkedList<Claimer> entry : powerSet)
+		{
+			allCoalitionsUnordered.add(new Coalition(entry));
+		}
+		
+		List<Coalition> allCoalitions = orderCoalitions(allCoalitionsUnordered);
+		
+		return allCoalitions;
+	}
+	
 	public static double sumRankingDifferences(List<CoalitionWithRankingDifference> input)
 	{
 		double sum = 0.0;
