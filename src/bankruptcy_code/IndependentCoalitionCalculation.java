@@ -13,313 +13,311 @@ public class IndependentCoalitionCalculation
 	
 	public static ArrayList<Integer> findIndependentCoalitions(int n)
 	{
-		int s = (int) (Math.pow(2,  n) - 2);
+		int s = (int) (Math.pow(2, n) - 2);
 		ArrayList<Boolean> checked = new ArrayList<Boolean>(Collections.nCopies(s + 1, false));
-		ArrayList<Integer> ind_coal = new ArrayList<Integer>(Collections.nCopies(n-1, 0));
-		ArrayList<ArrayList<Double>> arref = new ArrayList<ArrayList<Double>>
-			(Collections.nCopies(n, new ArrayList<Double>(Collections.nCopies(n, 0.0))));
-
-		ArrayList<Boolean> J = new ArrayList<Boolean>(Collections.nCopies(n, true));
-
-		checked.set(s, true);
-		J.set(0, false);
-		ind_coal.set(0, s+1);
-		int count = 1;
-		int i = 0;
-		ArrayList<Boolean> a = new ArrayList<Boolean>(Collections.nCopies(n, false));
-
-		int card = 0;
+		ArrayList<Integer> ind_coal = new ArrayList<Integer>(Collections.nCopies(n-1,  0));
+		// selected independent vectors in reduced row echelon form
+		ArrayList<ArrayList<Double>> arref = new ArrayList<ArrayList<Double>>(Collections.nCopies(n, new ArrayList<Double>(Collections.nCopies(n, 0.0))));
+		ArrayList<Boolean> pivots = new ArrayList<Boolean>(Collections.nCopies(n, true)); // missing pivot element vector
+		
+		// grand coalition is always in it
+		arref.set(0, new ArrayList<Double>(Collections.nCopies(n, 1.0)));		
+		checked.set(s,  true);
+		pivots.set(0, false);
+		ind_coal.set(0, s + 1);
+		int count = 1; // number of selected coalitions
+		int coalition = 0;
+		ArrayList<Boolean> a = new ArrayList<Boolean>(Collections.nCopies(n, false)); // coalition represented in binary
+		int coalSize = 0; // size of coalition
+		
 		Random r = new Random();
 		while(count < n - 1)
 		{
-			i = r.nextInt(s); // does not include s
-			if(!checked.get(i))
+			coalition = r.nextInt(s) + 1; // does not include s
+			if(!checked.get(coalition)) // checks if we have already looked at that coalition
 			{
 				Collections.fill(a,  false);
-				card = de2bi_card(i, a, n);
-				if(binrank(arref, J, a, n))
+				coalSize = de2bi_card(coalition, a, n);
+				if(binrank(arref, pivots, a, n)) // true if with the addition of the new coalition they remain independent
 				{
-					count++;
-					if(card < n / 2)
+					count++; // increase number of found coalitions
+					if(coalSize < n/2) // if coalition is small, we switch it for the opposite coalition
 					{
-						for(int j = 0; j < n; j++)
+						for(int i = 0; i < n; i++)
 						{
-							a.set(j, !a.get(j));
+							a.set(i, !a.get(i));
 						}
-						ind_coal.set(count - 1, s - i - 1);
+						ind_coal.set(count - 1, s-coalition+1); // TODO: was s-coalition-1, but that doesn't make sense
 					}
 					else
 					{
-						ind_coal.set(count - 1, i);
+						ind_coal.set(count - 1, coalition);
 					}
-					rowechform(arref, J, a, n, count);
+					// update reduced row echelon form with the new coalition
+					arref = updateReducedRowEchelonForm(arref, pivots, a, n, count);
 				}
-				checked.set(i, true);
-				checked.set(s-i-1, true);
-				
-				if(isCheckedFull(checked)) // reset the whole thing if no good combinations were found
-				{
-					Collections.fill(checked, false);
-					checked.set(s, true);
-					Collections.fill(ind_coal, 0);
-					Collections.fill(arref, new ArrayList<Double>(Collections.nCopies(n, 0.0)));
-					Collections.fill(J, true);
-					J.set(0, false);
-					ind_coal.set(0, s+1);
-					count = 1;
-					i = 0;
-					Collections.fill(a, false);
-					card = 0;
-				}
+				checked.set(coalition, true); // update checked with coalition
+				checked.set(s-coalition+1, true); // update checked with opposite, TODO: again, s-coalition-1 is incorrect?
 			}
 		}
-		return ind_coal;		
+		return ind_coal;
 	}
 	
-	private static boolean isCheckedFull(ArrayList<Boolean> checked)
-	{
-		boolean full = true;
-		for(Boolean b : checked)
-		{
-			if(!b)
-			{
-				full = false;
-			}
-		}
-		return full;
-	}
-	
-	private static void rowechform(ArrayList<ArrayList<Double>> arref, ArrayList<Boolean> J, ArrayList<Boolean> b, int n, int rank)
+	private static ArrayList<ArrayList<Double>> updateReducedRowEchelonForm(ArrayList<ArrayList<Double>> arref, ArrayList<Boolean> pivots, ArrayList<Boolean> a, int n, int count)
 	{
 		double prec = Math.pow(10, -10);
-		ArrayList<ArrayList<Double>> rref = new ArrayList<ArrayList<Double>>
-			(Collections.nCopies(rank + 1, new ArrayList<Double>(Collections.nCopies(n, 0.0))));
-
-		rref.set(0, arref.get(0));
 		
-		for(int i = 1; i < rank + 1; i++)
+		ArrayList<ArrayList<Double>> rref = new ArrayList<ArrayList<Double>>(Collections.nCopies(count + 1, new ArrayList<Double>(Collections.nCopies(n, 0.0))));
+		rref.set(0, arref.get(0)); // first row is always the grand coalition
+		
+		// copy arref to rref and add vector a
+		for(int i = 1; i < count + 1; i++)
 		{
 			for(int j = 0; j < n; j++)
 			{
-				if(i < rank)
+				if(i < count)
 				{
-					if(arref.get(i).get(j) >prec || arref.get(i).get(j) < -prec)
+					if(arref.get(i).get(j) > prec || arref.get(i).get(j) < (-1)*prec)
 					{
 						rref.get(i).set(j, arref.get(i).get(j));
 					}
-				}
-				else
-				{
-					if(b.get(j))
+					else
 					{
-						rref.get(i).set(j, 1.0);
+						if(a.get(j))
+						{
+							rref.get(i).set(j, 1.0);
+						}
 					}
 				}
 			}
 		}
 		
-		for(int i = 1; i < rank + 1; i++)
+		// eliminate all non-zero elements in the first column from the 2nd row with the help of the first row
+		for(int i = 1; i < count+1; i++)
 		{
-			if(rref.get(i).get(0) > prec || rref.get(i).get(0) < -prec)
+			if(rref.get(i).get(0) > prec || rref.get(i).get(0) < (-1)*prec)
 			{
 				if(rref.get(i).get(0) < 1 + prec && rref.get(i).get(0) > 1 - prec)
 				{
-					vec_subtract(rref.get(i), rref.get(0), rref.get(i));
+					rref.set(i, vectorSubtract(rref.get(0), rref.get(i)));
 				}
 				else
 				{
-					rowechform_piv2(rref, i, n);
+					rref.set(i, rowEchForm_piv2(rref, i, n));
 				}
 			}
 		}
 		
 		int l = 1;
 		int j = 1;
-		while(l < rank + 1 && j < n)
+		while(l < count + 1 && j < n)
 		{
-			int[] out = rowechform_loop(rref, J, l, j, rank, prec, n);
-			l = out[0];
-			j = out[1];
-		}
-		
-		if(rank + 1 < n)
-		{
-			for(int x = 1; x < rank + 1; x++)
+			ArrayList<Integer> nonzero = new ArrayList<Integer>();
+			ArrayList<Integer> ones = new ArrayList<Integer>();
+			
+			// find the non zero elements of column j.
+			for(int k = l; k < count + 1; k++)
 			{
-				arref.set(x, rref.get(x));
-			}
-		}
-		else
-		{
-			for(int x = 1; x < n; x++)
-			{
-				arref.set(x, rref.get(x));
-			}
-		}
-	}
-	
-	private static int[] rowechform_loop(ArrayList<ArrayList<Double>> rref, ArrayList<Boolean> J, int l, int j, int rank, double prec, int n)
-	{
-		ArrayList<Integer> nonz = new ArrayList<Integer>(Collections.nCopies(0, 0));
-		ArrayList<Integer> ones = new ArrayList<Integer>(Collections.nCopies(0, 0));
-		
-		for(int k = l; k < rank + 1; k++)
-		{
-			if(rref.get(k).get(j) > prec || rref.get(k).get(j) < -prec) {
-				if(rref.get(k).get(j) < 1 + prec && rref.get(k).get(j) > 1 - prec)
+				if(rref.get(k).get(j) > prec || rref.get(k).get(j) < (-1)*prec)
 				{
-					ones.add(k);
-				}
-				else
-				{
-					nonz.add(k);
+					if(rref.get(k).get(j) < 1 + prec && rref.get(k).get(j) > 1 - prec)
+					{
+						ones.add(k);
+					}
+					else
+					{
+						nonzero.add(k);
+					}
 				}
 			}
-		}
-		if(ones.size() == 0 && nonz.size() == 0)
-		{
-			j = j + 1;
-		}
-		else
-		{
-			if(ones.size() == 0)
+			if(ones.size() == 0 && nonzero.size() == 0)
 			{
-				if(nonz.get(0) != l)
-				{
-					swap_ith_and_firstnz(rref, nonz, l);
-				}
-				sc_vec_prod(rref.get(l), 1 / rref.get(l).get(j), rref.get(l));
+				j++; // if all elements are zero than we can move on to the next column
 			}
 			else
 			{
-				if(ones.get(0) != l)
+				if(ones.size() == 0)
 				{
-					swap_ith_and_firstnz(rref, nonz, l);
-				}
-			}
-			
-			if(ones.size() > 0)
-			{
-				if(ones.get(0) == l)
-				{
-					for(int k = 1; k < ones.size(); k++)
+					if(nonzero.get(0) != l)
 					{
-						vec_subtract(rref.get(ones.get(k)), rref.get(ones.get(k)), rref.get(l));
+						// swap_ith_and_ first_nonzero, swap the l row with first non zero row
+						ArrayList<Double> aux = rref.get(ones.get(0));
+						rref.set(nonzero.get(0), rref.get(l));
+						rref.set(l, aux);
+						nonzero.set(0, l);
 					}
+					rref.set(l, sc_vectorProd(1/rref.get(l).get(j), rref.get(l)));
 				}
 				else
 				{
-					for(int k = 0; k < ones.size(); k++)
+					if(ones.get(0) != l)
 					{
-						vec_subtract(rref.get(ones.get(k)), rref.get(ones.get(k)), rref.get(l));
+						ArrayList<Double>aux = rref.get(ones.get(0));
+						rref.set(ones.get(0), rref.get(l));
+						rref.set(l, aux);
+						if(nonzero.size() > 0)
+						{
+							if(nonzero.get(0) == l)
+							{
+								nonzero.set(0, ones.get(0));
+							}
+						}
+						ones.set(0, l);
 					}
 				}
-			}
-			if(nonz.size() > 0)
-			{
-				if(nonz.get(0) == l)
+				
+				if(ones.size() > 0)
 				{
-					for(int k = 1; k < nonz.size(); k++)
+					if(ones.get(0) == l)
 					{
-						rowechform_piv(rref, nonz, l, j, k, n);
+						for(int k = 1; k < ones.size(); k++)
+						{
+							rref.set(ones.get(k), vectorSubtract(rref.get(ones.get(k)), rref.get(l)));
+						}
+					}
+					else
+					{
+						for(int k = 0; k < ones.size(); k++)
+						{
+							rref.set(ones.get(k), vectorSubtract(rref.get(ones.get(k)), rref.get(l)));
+						}
 					}
 				}
-				else
+				
+				if(nonzero.size() > 0)
 				{
-					for(int k = 0; k < nonz.size(); k++)
+					if(nonzero.get(0) == l)
 					{
-						rowechform_piv(rref, nonz, l, j, k, n);
+						for(int k = 1; k < nonzero.size(); k++)
+						{
+							rref.set(nonzero.get(k), rowEchForm_piv(rref, nonzero, l, j, k, n));
+						}
+					}
+					else
+					{
+						for(int k = 0; k < nonzero.size(); k++)
+						{
+							rref.set(nonzero.get(k), rowEchForm_piv(rref, nonzero, l, j, k, n));
+						}
 					}
 				}
-			}
-			
-			l = l + 1;
-			J.set(j,  false);
-			j = j + 1;
+				
+				// finished with row l and column j 
+				l++;
+				pivots.set(j, false); // TODO: do we change the pivots array??
+				j++;
+			}			
 		}
-		int[] output = new int[2];
-		output[0] = l;
-		output[1] =j;
+		
+		// copy rref back to arref
+		if(count + 1 < n)
+		{
+			for(int i = 1; i < count + 1; i++)
+			{
+				arref.set(i,  rref.get(i));
+			}
+		}
+		else
+		{
+			for(int i = 1; i < n; i++)
+			{
+				arref.set(i,  rref.get(i));
+			}
+		}
+		return arref;
+	}
+	
+	private static ArrayList<Double> rowEchForm_piv(ArrayList<ArrayList<Double>> rref, ArrayList<Integer> nonzero, int i, int j, int k, int n)
+	{
+		ArrayList<Double> output = new ArrayList<Double>();
+		ArrayList<Double> aux = new ArrayList<Double>(Collections.nCopies(n, 0.0));
+		aux = sc_vectorProd(rref.get(nonzero.get(k)).get(j), rref.get(i));
+		output = vectorSubtract(rref.get(nonzero.get(k)), aux);
 		return output;
 	}
 	
-	private static void rowechform_piv(ArrayList<ArrayList<Double>> rref, ArrayList<Integer> nonz, int i, int j, int k, int n)
+	private static ArrayList<Double> rowEchForm_piv2(ArrayList<ArrayList<Double>> rref, int i, int n)
 	{
+		ArrayList<Double> output = new ArrayList<Double>();
 		ArrayList<Double> aux = new ArrayList<Double>(Collections.nCopies(n, 0.0));
-		sc_vec_prod(aux, rref.get(nonz.get(k)).get(j), rref.get(i));
-		vec_subtract(rref.get(nonz.get(k)), rref.get(nonz.get(k)), aux);
+		aux = sc_vectorProd(rref.get(i).get(0), rref.get(0));
+		output = vectorSubtract(aux, rref.get(i));
+		return output;
 	}
 	
-	private static void rowechform_piv2(ArrayList<ArrayList<Double>> rref, int i, int n)
+	private static int de2bi_card(int coalition, ArrayList<Boolean> a, int n)
 	{
-		ArrayList<Double> aux = new ArrayList<Double>(Collections.nCopies(n, 0.0));
-		sc_vec_prod(aux, rref.get(i).get(0), rref.get(0));
-		vec_subtract(rref.get(i), aux, rref.get(i));
-	}
-	
-	private static void swap_ith_and_firstnz(ArrayList<ArrayList<Double>> rref, ArrayList<Integer> nonz, int i)
-	{
-		ArrayList<Double> aux = rref.get(nonz.get(0));
-		rref.set(nonz.get(0), rref.get(i));
-		rref.set(i, aux);
-		nonz.set(0, i);
-	}
-	 
-	private void swap_ith_and_firstone(ArrayList<ArrayList<Double>> rref, ArrayList<Integer> ones, ArrayList<Integer> nonz, int i)
-	{
-		ArrayList<Double> aux = rref.get(ones.get(0));
-		rref.set(i,  aux);
-		if(nonz.size() > 0)
+		int coalSize = 0;
+		int x = 2;
+		for(int c = 0; c < n-2; c++)
 		{
-			if(nonz.get(0) == i)
-			{
-				nonz.set(0, ones.get(0));
-			}
+			x += x;
 		}
-		ones.set(0, i);
+		int j = coalition;
+		int l = n - 1;
+		while(j > 0)
+		{
+			if(j >= x)
+			{
+				a.set(l, true);
+				coalSize = coalSize + 1;
+				j -= x;
+			}
+			x /= 2;
+			l--;
+		}
+		return coalSize;
 	}
 	
-	private static boolean binrank(ArrayList<ArrayList<Double>> arref, ArrayList<Boolean> J, ArrayList<Boolean> b, int n)
+	private static boolean binrank(ArrayList<ArrayList<Double>> arref, ArrayList<Boolean> pivots, ArrayList<Boolean> a, int n)
 	{
-		double prec = Math.pow(10,  -10);
-		ArrayList<Double> B = new ArrayList<Double>(Collections.nCopies(n, 0.0));
-		for(int i = 0; i < n; i++)
+		double prec = Math.pow(10, -10);
+		
+		// the binary vector as doubles (1 and 0)
+		ArrayList<Double> aAsDoubles = new ArrayList<Double>(Collections.nCopies(n, 0.0));
+		for(int i = 0; i < n; i++) 
 		{
-			if(b.get(i) == true)
+			if(a.get(i))
 			{
-				B.set(i, 1.0);
+				aAsDoubles.set(i, 1.0);
+			}
+			else
+			{
+				aAsDoubles.set(i, 0.0);
 			}
 		}
 		
+		// find the fist zero row of arref, store it in m
 		int m = 0;
 		boolean size = true;
 		while(size)
 		{
-			if(nonz_vec(arref.get(m), prec))
+			if(nonZeroVector(arref.get(m), prec))
 			{
-				m++;
+				m = m + 1;
 			}
 			else
 			{
 				size = false;
 			}
 		}
+		// if m is greater than n then the matrix is by default good?
 		if(m >= n)
 		{
 			return false;
 		}
 		else
 		{
-			ArrayList<Boolean> pivot_col = new ArrayList<Boolean>(Collections.nCopies(n, false));
+			ArrayList<Boolean> pivot_col = new ArrayList<Boolean>(Collections.nCopies(n, false)); // columns with pivot elements (where pivots is false)
 			for(int i = 0; i < n; i++)
 			{
-				if(J.get(i) == false)
+				if(!pivots.get(i))
 				{
 					pivot_col.set(i, true);
 				}
 			}
 			int j = 0;
-			ArrayList<Boolean> piv = new ArrayList<Boolean>(Collections.nCopies(n, false));
+			ArrayList<Boolean> nonZero = new ArrayList<Boolean>(Collections.nCopies(n, false)); // non zero elements in aAsDoubles
 			ArrayList<Double> aux = new ArrayList<Double>(Collections.nCopies(n, 0.0));
 			int k = 0;
 			int I = 0;
@@ -329,21 +327,22 @@ public class IndependentCoalitionCalculation
 			{
 				for(int i = 0; i < n; i++)
 				{
-					if(B.get(i) > prec || B.get(i) < -prec)
+					if(aAsDoubles.get(i) > prec || aAsDoubles.get(i) < (-1)*prec)
 					{
-						piv.set(i,  true);
+						nonZero.set(i, true);
 					}
 				}
-				
-				if(sum_vecb(piv)==0)
+				int s = sumOfVector(nonZero);
+				if(s == 0)
 				{
-					return false;
+					return false; // if all elements are zero in aAsDoubles
 				}
 				else
 				{
-					while(k==0)
+					// find the first non-zero element in aAsDoubles, store its position in k
+					while(k == 0)
 					{
-						if(piv.get(I) == true)
+						if(nonZero.get(I))
 						{
 							k = I + 1;
 						}
@@ -351,12 +350,13 @@ public class IndependentCoalitionCalculation
 					}
 					k--;
 					I = 0;
-					if(J.get(k) == true)
+					if(pivots.get(k)) // if there was no pivot element there before than it returns true
 					{
 						return true;
 					}
-					else
+					else // otherwise there is a pivot element, with which we can eliminate the last non-zero element of aAsDoubles
 					{
+						// find the corresponding pivot element, store its position in ind
 						while(count < k + 1)
 						{
 							if(pivot_col.get(count))
@@ -367,38 +367,30 @@ public class IndependentCoalitionCalculation
 						}
 						ind--;
 						count = 0;
-						aux = sc_vec_prod(aux, B.get(k) / arref.get(ind).get(k), arref.get(ind));
-						B = vec_subtract(B, B, aux);
-						
+						// eliminate first non zero element of aAsDoubles
+						aux = sc_vectorProd(aAsDoubles.get(k)/arref.get(ind).get(k), arref.get(ind));
+						aAsDoubles = vectorSubtract(aAsDoubles, aux);
 						j++;
 					}
 				}
-				for(int l = 0; l < n; l++)
+				// reset
+				for(int i = 0; i < n; i ++)
 				{
-					piv.set(l, false);
+					nonZero.set(i, false);
 				}
 				k = 0;
 				ind = 0;
 			}
+			// iterated through all, no pivot elements, returns false
 			return false;
 		}
 	}
 	
-	private static int sum_vecb(ArrayList<Boolean> x)
+	private static boolean nonZeroVector(ArrayList<Double> input, double prec)
 	{
-		int s = 0;
-		for(int i = 0; i< x.size(); i++)
+		for(int i = 0; i < input.size(); i++)
 		{
-			s += x.get(i) ? 1:0;
-		}
-		return s;
-	}
-	
-	private static boolean nonz_vec(ArrayList<Double> x, double prec)
-	{
-		for(int i = 0; i < x.size(); i++)
-		{
-			if(x.get(i) > prec || x.get(i) < -prec)
+			if(input.get(i) > prec || input.get(i) < (-1)*prec)
 			{
 				return true;
 			}
@@ -406,46 +398,36 @@ public class IndependentCoalitionCalculation
 		return false;
 	}
 	
-	private static ArrayList<Double> vec_subtract(ArrayList<Double> z, ArrayList<Double> x, ArrayList<Double> y)
+	private static int sumOfVector(ArrayList<Boolean> vec)
 	{
-		for(int i = 0; i != x.size(); i++)
+		int s = 0;
+		for(int i = 0; i < vec.size(); i++) 
 		{
-			z.set(i, x.get(i) - y.get(i));
-		}
-		return z;
-	}
-	
-	private static ArrayList<Double> sc_vec_prod(ArrayList<Double> y, double a, ArrayList<Double> x)
-	{
-		for(int i = 0; i < x.size(); i++)
-		{
-			y.set(i, a*x.get(i));
-		}
-		return y;
-	}
-	
-	private static int de2bi_card(int i, ArrayList<Boolean> a, int n)
-	{
-		int k = 0;
-		int x = 2;
-		for(int c = 0; c < n-2; c++)
-		{
-			x += x;
-		}
-		int j = i + 1;
-		int l = n - 1;
-		while(j > 0)
-		{
-			if(j >= x)
+			if(vec.get(i))
 			{
-				a.set(l, true);
-				k = k + 1;
-				j -= x;
+				s = s + 1; // adds one if it is true, none (0) if false
 			}
-			x /= 2;
-			l--;
 		}
-		return k;
+		return s;
 	}
-
+	
+	private static ArrayList<Double> sc_vectorProd(double a, ArrayList<Double> input)
+	{
+		ArrayList<Double> output = new ArrayList<Double>();
+		for(int i = 0; i < input.size(); i++)
+		{
+			output.add(a*input.get(i));
+		}
+		return output;
+	}
+	
+	private static ArrayList<Double> vectorSubtract(ArrayList<Double> vec1, ArrayList<Double> vec2)
+	{
+		ArrayList<Double> output = new ArrayList<Double>();
+		for(int i = 0; i != vec1.size(); i++)
+		{
+			output.add(vec1.get(i) - vec2.get(i));
+		}
+		return output;
+	}
 }

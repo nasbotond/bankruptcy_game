@@ -27,8 +27,10 @@ import bankruptcy_code.RuleCalculator;
 @SuppressWarnings("serial")
 public abstract class CalculationPanel extends JPanel
 {
+	
 	public static List<Coalition> getIndependentCoalitions(int n, List<Claimer> claimers)
 	{
+		
 		ArrayList<Integer> ind_coal = IndependentCoalitionCalculation.findIndependentCoalitions(claimers.size());
 		
 		List<Coalition> coalitionsUnordered = new ArrayList<Coalition>(); // master list of coalitions
@@ -62,7 +64,7 @@ public abstract class CalculationPanel extends JPanel
 		}
 		
 		List<Coalition> coalitions = orderCoalitions(coalitionsUnordered);
-		
+		// System.out.println(coalitions);
 		return coalitions;
 	}
 	

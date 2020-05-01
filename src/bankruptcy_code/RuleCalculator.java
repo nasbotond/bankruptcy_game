@@ -126,7 +126,7 @@ public class RuleCalculator
 		}
 		long endTime = System.nanoTime();
 		long elapsedTime = endTime - startTime;
-		System.out.println("shap time: " + ((double) elapsedTime/1_000_000_000) + " seconds");
+		// System.out.println("shap time: " + ((double) elapsedTime/1_000_000_000) + " seconds");
 		return shapl;
 	}
 	

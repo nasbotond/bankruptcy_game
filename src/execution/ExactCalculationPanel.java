@@ -27,7 +27,6 @@ import bankruptcy_code.Claimer;
 import bankruptcy_code.Coalition;
 import bankruptcy_code.CoalitionWithRankingDifference;
 import bankruptcy_code.CustomMathOperations;
-import bankruptcy_code.IndependentCoalitionCalculation;
 import bankruptcy_code.RankCalculator;
 import bankruptcy_code.RuleCalculator;
 import exceptions.InvalidEstateException;
