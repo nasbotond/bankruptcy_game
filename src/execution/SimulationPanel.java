@@ -334,7 +334,8 @@ public class SimulationPanel extends CalculationPanel
 		List<Coalition> allCoalitions = getAllCoalitions(claimers);
 		List<Coalition> coalitions = getIndependentCoalitions(numClaimers, claimers);
 		
-		double maximumSRD = (((coalitions.size()-1)*(coalitions.size() - 1)) / 2);
+		// double maximumSRD = (((coalitions.size()-1)*(coalitions.size() - 1)) / 2);
+		double maximumSRD = (((coalitions.size())*(coalitions.size())) / 2);
 		maximumDiffLabel.setText("Maximum: 1.0");
 		
 		estate = CustomMathOperations.generateUniformRandom((RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMin.getText())),
