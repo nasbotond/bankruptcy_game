@@ -64,31 +64,20 @@ public class MainNoGUI extends CalculationPanel
 			claimers.add(new Claimer((char)(97 + i), CustomMathOperations.generateUniformRandom(0, 1000)));
 		}
 		
-		List<LinkedList<Claimer>> powerSet = new LinkedList<LinkedList<Claimer>>();
+		List<Coalition> allCoalitions = getAllCoalitions(claimers);
+		List<Coalition> coalitions = getIndependentCoalitions(numClaimers, claimers);
 		
-		for(int i = 1; i <= claimers.size(); i++)
-		{
-			powerSet.addAll((Collection<? extends LinkedList<Claimer>>) CustomMathOperations.combination(claimers, i));
-		}
-		
-		List<Coalition> coalitions = new ArrayList<Coalition>(); // master list of coalitions
-		
-		for(LinkedList<Claimer> entry : powerSet)
-		{
-			coalitions.add(new Coalition(entry));			
-		}
-		
-		List<Coalition> orderedList = orderCoalitions(coalitions);
-		
-		double maximumSRD = (((coalitions.size()-1)*(coalitions.size() - 1)) / 2);
+		// double maximumSRD = (((coalitions.size()-1)*(coalitions.size() - 1)) / 2);
+		double maximumSRD = (((coalitions.size())*(coalitions.size())) / 2);
 		
 		estate = CustomMathOperations.generateUniformRandom((RuleCalculator.sum(claimers, "claims") * Double.parseDouble(args[1])),
 							(RuleCalculator.sum(claimers, "claims") * Double.parseDouble(args[2])));
 		
 		calculateClaimerRuleAllocations(estate, claimers);
-		// RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, true);
-		// RuleCalculator.calculateShapleyValues(estate, claimers, coalitions, true);	
-		RuleCalculator.shap(estate, claimers, coalitions, true);
+		RuleCalculator.shap(estate, claimers, allCoalitions, true);
+		
+		RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, true); // needs to be called after shapley (because shapley calls same method as version A every time)
+		
 		calculateCoalitionRuleAllocations(coalitions, true);	
 		RuleCalculator.calculateReference("characteristic function", coalitions);
 		
@@ -144,12 +133,15 @@ public class MainNoGUI extends CalculationPanel
 
 			iterations = iterations + 1;			
 			
-			updateCoalitionClaimers(coalitions, claimers);
+			updateCoalitionClaimers(allCoalitions, claimers); // update all coalitions with the new claims
+			
+			coalitions = getIndependentCoalitions(numClaimers, claimers);
 			
 			calculateClaimerRuleAllocations(estate, claimers);
-			// RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, true);
-			// RuleCalculator.calculateShapleyValues(estate, claimers, coalitions, true);	
-			RuleCalculator.shap(estate, claimers, coalitions, true);
+			RuleCalculator.shap(estate, claimers, allCoalitions, true);
+			
+			RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, true); // needs to be called after shapley (because shapley calls same method as version A every time)
+			
 			calculateCoalitionRuleAllocations(coalitions, true);	
 			RuleCalculator.calculateReference("characteristic function", coalitions);
 			
