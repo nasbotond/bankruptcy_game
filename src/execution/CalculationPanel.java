@@ -17,12 +17,12 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
-import bankruptcy_code.Claimer;
-import bankruptcy_code.Coalition;
-import bankruptcy_code.CoalitionWithRankingDifference;
-import bankruptcy_code.CustomMathOperations;
-import bankruptcy_code.IndependentCoalitionCalculation;
-import bankruptcy_code.RuleCalculator;
+import calculations.CustomMathOperations;
+import calculations.IndependentCoalitionCalculation;
+import calculations.RuleCalculator;
+import data_elements.Claimer;
+import data_elements.Coalition;
+import data_elements.CoalitionWithRankingDifference;
 
 @SuppressWarnings("serial")
 public abstract class CalculationPanel extends JPanel

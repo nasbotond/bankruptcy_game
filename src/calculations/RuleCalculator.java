@@ -1,4 +1,4 @@
-package bankruptcy_code;
+package calculations;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -6,6 +6,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+
+import data_elements.Claimer;
+import data_elements.Coalition;
 
 public class RuleCalculator
 {

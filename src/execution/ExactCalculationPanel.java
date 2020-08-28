@@ -23,12 +23,13 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import bankruptcy_code.Claimer;
-import bankruptcy_code.Coalition;
-import bankruptcy_code.CoalitionWithRankingDifference;
-import bankruptcy_code.CustomMathOperations;
-import bankruptcy_code.RankCalculator;
-import bankruptcy_code.RuleCalculator;
+
+import calculations.CustomMathOperations;
+import calculations.RankCalculator;
+import calculations.RuleCalculator;
+import data_elements.Claimer;
+import data_elements.Coalition;
+import data_elements.CoalitionWithRankingDifference;
 import exceptions.InvalidEstateException;
 
 @SuppressWarnings("serial")

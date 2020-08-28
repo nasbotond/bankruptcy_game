@@ -1,4 +1,4 @@
-package bankruptcy_code;
+package calculations;
 
 import java.util.ArrayList;
 import java.util.Collections;

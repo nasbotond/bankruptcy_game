@@ -1,7 +1,10 @@
-package bankruptcy_code;
+package calculations;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import data_elements.Coalition;
+import data_elements.CoalitionWithRankingDifference;
 
 public class RankCalculator 
 {
