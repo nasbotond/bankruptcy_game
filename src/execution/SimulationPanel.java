@@ -77,10 +77,12 @@ public class SimulationPanel extends CalculationPanel
 	private JLabel numIterations;
 	private boolean stop = false;
 	private boolean isVersionB = false;
+	private boolean isVersionC = false;
 	
-	public SimulationPanel(boolean isVersionB)
+	public SimulationPanel(boolean isVersionB, boolean isVersionC)
 	{
 		this.isVersionB = isVersionB;
+		this.isVersionC = isVersionC;
 		this.setLayout(new GridLayout());
 		this.setBackground(Color.WHITE);
 		
@@ -241,8 +243,15 @@ public class SimulationPanel extends CalculationPanel
 				    	public void run()
 				    	{
 				    		try
-				    		{
-				    			calculateAverageSRD(isVersionB);	    					    							    			
+				    		{				    			
+				    			if(isVersionC)
+				    			{
+				    				calculateSRDEqualCoalitionSize();
+				    			}
+				    			else
+				    			{
+				    				calculateAverageSRD(isVersionB);
+				    			}
 							}
 				    		catch(Exception exception)  // TODO?
 				    		{
@@ -300,6 +309,248 @@ public class SimulationPanel extends CalculationPanel
 		    
 		    thread.start();		
 		}
+	}
+	
+	private void calculateSRDEqualCoalitionSize()
+	{
+		final int numClaimers = Integer.parseInt(numberOfCreditors.getText());
+		double estate;
+		int iterations = 1;
+		
+		List<CoalitionWithRankingDifference> ref;
+		List<CoalitionWithRankingDifference> prop;
+		List<CoalitionWithRankingDifference> cea;
+		List<CoalitionWithRankingDifference> cel;
+		List<CoalitionWithRankingDifference> aprop;
+		List<CoalitionWithRankingDifference> shap;
+		List<CoalitionWithRankingDifference> tal;
+		List<CoalitionWithRankingDifference> mo;
+		List<CoalitionWithRankingDifference> cli;
+		List<CoalitionWithRankingDifference> eq;
+		List<CoalitionWithRankingDifference> unirand;
+		
+		Map<String, Double> averageSRD;		
+		
+		numIterations.setText("iterations: " + iterations);  // update iterations label in UI
+		
+		List<Claimer> claimers = new ArrayList<Claimer>(); // master list of claimers
+		
+		for(int i = 0; i < numClaimers; i++)
+		{
+			claimers.add(new Claimer((char)(97 + i), CustomMathOperations.generateUniformRandom(0, 1000)));
+		}
+
+		List<Coalition> coalitions = getAllCoalitions(claimers);
+		// List<Coalition> coalitions = getIndependentCoalitions(numClaimers, claimers);
+		
+		// double maximumSRD = (((coalitions.size()-1)*(coalitions.size() - 1)) / 2);
+		double maximumSRD = (((coalitions.size())*(coalitions.size())) / 2);
+		maximumDiffLabel.setText("Maximum: 1.0");
+		
+		estate = CustomMathOperations.generateUniformRandom((RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMin.getText())),
+							(RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMax.getText())));
+		
+		calculateClaimerRuleAllocations(estate, claimers);
+		RuleCalculator.shap(estate, claimers, coalitions, false);
+		
+		RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, false); // needs to be called after shapley (because shapley calls same method as version A every time)
+		
+		calculateCoalitionRuleAllocations(coalitions, false);	
+		RuleCalculator.calculateReference(referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()), coalitions);
+		List<Coalition> equalSizedCoalitions;
+		
+		double[] eqCoalitionSRDs = new double[10];
+		
+		for(int i = 1; i <= numClaimers/2; i++)
+		{
+			equalSizedCoalitions = new ArrayList<Coalition>();
+			int cap = numClaimers/2;
+			while(cap > 0)
+			{
+				int index = (int)(Math.random()*coalitions.size());
+				if(coalitions.get(index).getClaimers().size() == (claimers.size() - i))
+				{
+					equalSizedCoalitions.add(coalitions.get(index));
+					cap--;
+				}
+			}
+			
+			ref = RankCalculator.rankingBasedOnReference(equalSizedCoalitions);
+			prop = RankCalculator.rankingBasedOnProportionalAllocation(equalSizedCoalitions);
+			cea = RankCalculator.rankingBasedOnCEAAllocation(equalSizedCoalitions);
+			cel = RankCalculator.rankingBasedOnCELAllocation(equalSizedCoalitions);
+			aprop = RankCalculator.rankingBasedOnAdjustedProportionalAllocation(equalSizedCoalitions);
+			shap = RankCalculator.rankingBasedOnShapleyAllocation(equalSizedCoalitions);
+			tal = RankCalculator.rankingBasedOnTalmudAllocation(equalSizedCoalitions);
+			mo = RankCalculator.rankingBasedOnMinimalOverlappingAllocation(equalSizedCoalitions);
+			cli = RankCalculator.rankingBasedOnClightsAllocation(equalSizedCoalitions);
+			eq = RankCalculator.rankingBasedOnEqualAllocation(equalSizedCoalitions);
+			unirand = RankCalculator.rankingBasedOnUniformRandomAllocation(equalSizedCoalitions);
+			/*
+			long endTime = System.nanoTime();
+			long elapsedTime = endTime - startTime;
+			System.out.println(elapsedTime);
+			System.out.println("ranking time: " + ((double) elapsedTime/1_000_000_000) + " seconds");
+			*/
+			
+			RankCalculator.compareRanks(prop, ref);
+			RankCalculator.compareRanks(cea, ref);
+			RankCalculator.compareRanks(cel, ref);
+			RankCalculator.compareRanks(aprop, ref);
+			RankCalculator.compareRanks(shap, ref);
+			RankCalculator.compareRanks(tal, ref);
+			RankCalculator.compareRanks(mo, ref);
+			RankCalculator.compareRanks(cli, ref);
+			RankCalculator.compareRanks(eq, ref);
+			RankCalculator.compareRanks(unirand, ref);
+			
+			eqCoalitionSRDs[0] = eqCoalitionSRDs[0] + sumRankingDifferences(prop);
+			eqCoalitionSRDs[1] = eqCoalitionSRDs[1] + sumRankingDifferences(cea);
+			eqCoalitionSRDs[2] = eqCoalitionSRDs[2] + sumRankingDifferences(cel);
+			eqCoalitionSRDs[3] = eqCoalitionSRDs[3] + sumRankingDifferences(aprop);
+			eqCoalitionSRDs[4] = eqCoalitionSRDs[4] + sumRankingDifferences(shap);
+			eqCoalitionSRDs[5] = eqCoalitionSRDs[5] + sumRankingDifferences(tal);
+			eqCoalitionSRDs[6] = eqCoalitionSRDs[6] + sumRankingDifferences(mo);
+			eqCoalitionSRDs[7] = eqCoalitionSRDs[7] + sumRankingDifferences(cli);
+			eqCoalitionSRDs[8] = eqCoalitionSRDs[8] + sumRankingDifferences(eq);
+			eqCoalitionSRDs[9] = eqCoalitionSRDs[9] + sumRankingDifferences(unirand);
+		}
+		
+		averageSRD = new HashMap<String, Double>();
+		
+		averageSRD.put("prop", eqCoalitionSRDs[0]/(numClaimers/2));
+		averageSRD.put("cea", eqCoalitionSRDs[1]/(numClaimers/2));
+		averageSRD.put("cel", eqCoalitionSRDs[2]/(numClaimers/2));
+		averageSRD.put("aprop", eqCoalitionSRDs[3]/(numClaimers/2));
+		averageSRD.put("shap", eqCoalitionSRDs[4]/(numClaimers/2));
+		averageSRD.put("tal", eqCoalitionSRDs[5]/(numClaimers/2));
+		averageSRD.put("mo", eqCoalitionSRDs[6]/(numClaimers/2));
+		averageSRD.put("cli", eqCoalitionSRDs[7]/(numClaimers/2));
+		averageSRD.put("eq", eqCoalitionSRDs[8]/(numClaimers/2));
+		averageSRD.put("unirand", eqCoalitionSRDs[9]/(numClaimers/2));
+		
+		while(!stop)
+		{		
+			for(int i = 0; i < numClaimers; i++)
+			{
+				claimers.get(i).setClaim(CustomMathOperations.generateUniformRandom(0, 1000));
+			}
+
+			// estate = generateUniformRandom(RuleCalculator.sum(claimers, "claims")/2.0, RuleCalculator.sum(claimers, "claims"));
+			estate = CustomMathOperations.generateUniformRandom((RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMin.getText())),
+					(RuleCalculator.sum(claimers, "claims") * Double.parseDouble(estateFunctionMax.getText())));
+
+			iterations = iterations + 1;			
+			
+			updateCoalitionClaimers(coalitions, claimers); // update all coalitions with the new claims
+			
+			// coalitions = getIndependentCoalitions(numClaimers, claimers);
+			
+			calculateClaimerRuleAllocations(estate, claimers);
+			// RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, isVersionB);
+			// RuleCalculator.calculateShapleyValues(estate, claimers, coalitions, isVersionB);
+			RuleCalculator.shap(estate, claimers, coalitions, false);
+			RuleCalculator.calculateCharacteristicFunction(estate, coalitions, claimers, false);
+			calculateCoalitionRuleAllocations(coalitions, false);	
+			RuleCalculator.calculateReference(referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()), coalitions);
+			
+			// List<Coalition> equalSizedCoalitions;
+			eqCoalitionSRDs = new double[10];
+			
+			for(int i = 1; i <= numClaimers/2; i++)
+			{
+				equalSizedCoalitions = new ArrayList<Coalition>();
+				int cap = numClaimers-2;
+				while(cap > 0)
+				{
+					int index = (int)(Math.random()*coalitions.size());
+					if(coalitions.get(index).getClaimers().size() == (claimers.size() - i))
+					{
+						equalSizedCoalitions.add(coalitions.get(index));
+						cap--;
+					}
+				}
+				
+				ref = RankCalculator.rankingBasedOnReference(equalSizedCoalitions);
+				prop = RankCalculator.rankingBasedOnProportionalAllocation(equalSizedCoalitions);
+				cea = RankCalculator.rankingBasedOnCEAAllocation(equalSizedCoalitions);
+				cel = RankCalculator.rankingBasedOnCELAllocation(equalSizedCoalitions);
+				aprop = RankCalculator.rankingBasedOnAdjustedProportionalAllocation(equalSizedCoalitions);
+				shap = RankCalculator.rankingBasedOnShapleyAllocation(equalSizedCoalitions);
+				tal = RankCalculator.rankingBasedOnTalmudAllocation(equalSizedCoalitions);
+				mo = RankCalculator.rankingBasedOnMinimalOverlappingAllocation(equalSizedCoalitions);
+				cli = RankCalculator.rankingBasedOnClightsAllocation(equalSizedCoalitions);
+				eq = RankCalculator.rankingBasedOnEqualAllocation(equalSizedCoalitions);
+				unirand = RankCalculator.rankingBasedOnUniformRandomAllocation(equalSizedCoalitions);
+				/*
+				long endTime = System.nanoTime();
+				long elapsedTime = endTime - startTime;
+				System.out.println(elapsedTime);
+				System.out.println("ranking time: " + ((double) elapsedTime/1_000_000_000) + " seconds");
+				*/
+				
+				RankCalculator.compareRanks(prop, ref);
+				RankCalculator.compareRanks(cea, ref);
+				RankCalculator.compareRanks(cel, ref);
+				RankCalculator.compareRanks(aprop, ref);
+				RankCalculator.compareRanks(shap, ref);
+				RankCalculator.compareRanks(tal, ref);
+				RankCalculator.compareRanks(mo, ref);
+				RankCalculator.compareRanks(cli, ref);
+				RankCalculator.compareRanks(eq, ref);
+				RankCalculator.compareRanks(unirand, ref);
+				
+				eqCoalitionSRDs[0] = eqCoalitionSRDs[0] + sumRankingDifferences(prop);
+				eqCoalitionSRDs[1] = eqCoalitionSRDs[1] + sumRankingDifferences(cea);
+				eqCoalitionSRDs[2] = eqCoalitionSRDs[2] + sumRankingDifferences(cel);
+				eqCoalitionSRDs[3] = eqCoalitionSRDs[3] + sumRankingDifferences(aprop);
+				eqCoalitionSRDs[4] = eqCoalitionSRDs[4] + sumRankingDifferences(shap);
+				eqCoalitionSRDs[5] = eqCoalitionSRDs[5] + sumRankingDifferences(tal);
+				eqCoalitionSRDs[6] = eqCoalitionSRDs[6] + sumRankingDifferences(mo);
+				eqCoalitionSRDs[7] = eqCoalitionSRDs[7] + sumRankingDifferences(cli);
+				eqCoalitionSRDs[8] = eqCoalitionSRDs[8] + sumRankingDifferences(eq);
+				eqCoalitionSRDs[9] = eqCoalitionSRDs[9] + sumRankingDifferences(unirand);				
+			}	
+			
+			averageSRD.put("prop", averageSRD.get("prop").doubleValue() + (eqCoalitionSRDs[0]/(numClaimers/2) - averageSRD.get("prop").doubleValue())/iterations);
+			averageSRD.put("cea", averageSRD.get("cea").doubleValue() + (eqCoalitionSRDs[1]/(numClaimers/2) - averageSRD.get("cea").doubleValue())/iterations);
+			averageSRD.put("cel", averageSRD.get("cel").doubleValue() + (eqCoalitionSRDs[2]/(numClaimers/2) - averageSRD.get("cel").doubleValue())/iterations);
+			averageSRD.put("aprop", averageSRD.get("aprop").doubleValue() + (eqCoalitionSRDs[3]/(numClaimers/2) - averageSRD.get("aprop").doubleValue())/iterations);
+			averageSRD.put("shap", averageSRD.get("shap").doubleValue() + (eqCoalitionSRDs[4]/(numClaimers/2) - averageSRD.get("shap").doubleValue())/iterations);
+			averageSRD.put("tal", averageSRD.get("tal").doubleValue() + (eqCoalitionSRDs[5]/(numClaimers/2) - averageSRD.get("tal").doubleValue())/iterations);
+			averageSRD.put("mo", averageSRD.get("mo").doubleValue() + (eqCoalitionSRDs[6]/(numClaimers/2) - averageSRD.get("mo").doubleValue())/iterations);
+			averageSRD.put("cli", averageSRD.get("cli").doubleValue() + (eqCoalitionSRDs[7]/(numClaimers/2) - averageSRD.get("cli").doubleValue())/iterations);
+			averageSRD.put("eq", averageSRD.get("eq").doubleValue() + (eqCoalitionSRDs[8]/(numClaimers/2) - averageSRD.get("eq").doubleValue())/iterations);
+			averageSRD.put("unirand", averageSRD.get("unirand").doubleValue() + (eqCoalitionSRDs[9]/(numClaimers/2) - averageSRD.get("unirand").doubleValue())/iterations);
+			
+			
+			if(iterations % 10 == 0)
+			{
+				propLabel.setText("Relative Average Proportional Rule SRD: " + averageSRD.get("prop")/maximumSRD);
+				ceaLabel.setText("Relative Average CEA Rule SRD: " + averageSRD.get("cea")/maximumSRD);
+				celLabel.setText("Relative Average CEL Rule SRD: " + averageSRD.get("cel")/maximumSRD);
+				apropLabel.setText("Relative Average Adjusted Proportional Rule SRD: " + averageSRD.get("aprop")/maximumSRD);
+				shapLabel.setText("Relative Average Shapley Value SRD: " + averageSRD.get("shap")/maximumSRD);
+				talLabel.setText("Relative Average Talmud Rule SRD: " + averageSRD.get("tal")/maximumSRD);
+				moLabel.setText("Relative Average Minimal Overlap Rule SRD: " + averageSRD.get("mo")/maximumSRD);
+				cliLabel.setText("Relative Average Per Capita Nucleolous Rule SRD: " + averageSRD.get("cli")/maximumSRD);				
+				eqLabel.setText("Control 1: Relative Average Equal Allocation SRD: " + averageSRD.get("eq")/maximumSRD);
+				unirandLabel.setText("Control 2: Relative Average Uniform Random Allocation SRD: " + averageSRD.get("unirand")/maximumSRD);
+			}
+			
+			numIterations.setText("iterations: " + iterations);  // update iterations label in UI
+		}
+		try 
+		{
+			saveToFile(false, referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()), Integer.parseInt(numberOfCreditors.getText()), 
+					Double.parseDouble(estateFunctionMin.getText()), Double.parseDouble(estateFunctionMax.getText()),  iterations);
+		}
+		catch(IOException ex)
+		{
+			ex.printStackTrace();
+		}
+		enableAllButtons();
+		stop = false;
 	}
 
 	private void calculateAverageSRD(boolean isVersionB)

@@ -58,10 +58,12 @@ public class ExactCalculationPanel extends CalculationPanel
 	private JTextArea consoleOutput;
 	
 	private boolean isVersionB = false;
+	private boolean isVersionC = false;
 	
-	public ExactCalculationPanel(boolean isVersionB)
+	public ExactCalculationPanel(boolean isVersionB, boolean isVersionC)
 	{		
 		this.isVersionB = isVersionB;
+		this.isVersionC = isVersionC;
 		this.setLayout(new GridLayout());
 
 		comboPanel = new JPanel(new BorderLayout());
@@ -221,7 +223,15 @@ public class ExactCalculationPanel extends CalculationPanel
 							{
 								// PrintWriter pw = new PrintWriter("output.txt");
 								// pw.close();
-								calculateExactSRD(isVersionB);
+								if(isVersionC)
+								{
+									calculateEqualCoalitionExactSRD();
+								}
+								else
+								{
+									calculateExactSRD(isVersionB);
+								}
+								
 								// FileReader reader = new FileReader("output.txt");
 								// consoleOutput.read(reader, "output.txt"); // Object of JTextArea
 							}
@@ -248,6 +258,244 @@ public class ExactCalculationPanel extends CalculationPanel
 				JOptionPane.showMessageDialog(new JFrame(), label, "ERROR", JOptionPane.ERROR_MESSAGE);
 			}
 		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void calculateEqualCoalitionExactSRD() throws InvalidEstateException
+	{
+		double estateInput = Double.parseDouble(estate.getText());
+		List<Claimer> claimers = new ArrayList<Claimer>();
+		double sumOfClaims = 0.0;
+		
+		for(JTextField input : listOfCreditorInputs)
+		{
+			sumOfClaims += Double.parseDouble(input.getText());
+			claimers.add(new Claimer((char)(97 + listOfCreditorInputs.indexOf(input)), Double.parseDouble(input.getText())));
+		}
+		
+		if(estateInput <= sumOfClaims)
+		{
+			List<Coalition> coalitions = getAllCoalitions(claimers);
+			// List<Coalition> coalitions = getIndependentCoalitions(claimers.size(), claimers);
+			
+			calculateClaimerRuleAllocations(estateInput, claimers);
+			// RuleCalculator.calculateCharacteristicFunction(estateInput, coalitions, claimers, isVersionB);
+			long startTime = System.nanoTime();
+			// RuleCalculator.calculateShapleyValues(estateInput, claimers, coalitions, isVersionB); // also calculates the characteristic function
+			RuleCalculator.shap(estateInput, claimers, coalitions, false);
+			
+			RuleCalculator.calculateCharacteristicFunction(estateInput, coalitions, claimers, false);
+			
+			long endTime = System.nanoTime();
+			long elapsedTime = endTime - startTime;
+			// System.out.println(elapsedTime);
+			System.out.println("shap total time: " + ((double) elapsedTime/1_000_000_000) + " seconds");
+			
+			calculateCoalitionRuleAllocations(coalitions, false);
+			RuleCalculator.calculateReference(referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()), coalitions);
+			// coalitions.remove(coalitions.size() - 1); // TODO
+			// RuleCalculator.calculateReferenceOLD(estateInput, coalitions, claimers, isVersionB);
+			long startTimeRank = System.nanoTime();
+			System.out.println("Starting ranking...");
+			FileWriter fw;
+			try
+			{
+				fw = new FileWriter("exact_versionC_ref-" + referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()) 
+				+ "_numAgents-" + listOfCreditorInputs.size() + "_estate-" + Double.parseDouble(estate.getText()) + ".txt");
+				
+				writeToConsoleAndFile(consoleOutput, fw, "Version C\nreference: "
+						+ referenceSelectionCombo.getItemAt(referenceSelectionCombo.getSelectedIndex()) 
+						+ "\nNumber of Creditors: " + listOfCreditorInputs.size() + "\nEstate: " + Double.parseDouble(estate.getText()) + "\n");		
+
+				writeToConsoleAndFile(consoleOutput, fw, "\nClaimers\n");
+
+				for(Claimer entry : claimers)
+				{
+					writeToConsoleAndFile(consoleOutput, fw, entry.getId() + " Claim: " + entry.getClaim() + " PROP: " + entry.getProportionalAllocation() + " CEA: " + entry.getCEAAllocation()
+					+ " CEL: " + entry.getCELAllocation()  + " SHAP: " + entry.getShapleyValue()  + " TAL: " + entry.getTalmudAllocation()
+					+ " MO: " + entry.getMinimalOverlappingAllocation() + " APROP: " + entry.getAdjustedProportionalAllocation()
+					+ " CLI: " + entry.getClightsAllocation() + " EQ: " + entry.getEqualAllocation() + " UNIRAND: " + entry.getUniformRandomAllocation() + "\n");
+				}
+				
+				List<CoalitionWithRankingDifference> ref = null;
+				List<CoalitionWithRankingDifference> prop = null;
+				List<CoalitionWithRankingDifference> cea = null;
+				List<CoalitionWithRankingDifference> cel = null;
+				List<CoalitionWithRankingDifference> aprop = null;
+				List<CoalitionWithRankingDifference> shap = null;
+				List<CoalitionWithRankingDifference> tal = null;
+				List<CoalitionWithRankingDifference> mo = null;
+				List<CoalitionWithRankingDifference> cli = null;
+				List<CoalitionWithRankingDifference> eq = null;
+				List<CoalitionWithRankingDifference> unirand = null;
+				
+				List<Coalition> equalSizedCoalitions;
+				
+				// double[] eqCoalitionSRDs = new double[10];
+				
+				for(int i = 1; i <= claimers.size()/2; i++)
+				{
+					equalSizedCoalitions = new ArrayList<Coalition>();
+					int cap = claimers.size()-2;
+					while(cap > 0)
+					{
+						int index = (int)(Math.random()*coalitions.size());
+						if(coalitions.get(index).getClaimers().size() == (claimers.size() - i))
+						{
+							if(!equalSizedCoalitions.contains(coalitions.get(index)))
+							{
+								equalSizedCoalitions.add(coalitions.get(index));
+								cap--;
+							}							
+						}
+					}
+					
+					ref = RankCalculator.rankingBasedOnReference(equalSizedCoalitions);
+					prop = RankCalculator.rankingBasedOnProportionalAllocation(equalSizedCoalitions);
+					cea = RankCalculator.rankingBasedOnCEAAllocation(equalSizedCoalitions);
+					cel = RankCalculator.rankingBasedOnCELAllocation(equalSizedCoalitions);
+					aprop = RankCalculator.rankingBasedOnAdjustedProportionalAllocation(equalSizedCoalitions);
+					shap = RankCalculator.rankingBasedOnShapleyAllocation(equalSizedCoalitions);
+					tal = RankCalculator.rankingBasedOnTalmudAllocation(equalSizedCoalitions);
+					mo = RankCalculator.rankingBasedOnMinimalOverlappingAllocation(equalSizedCoalitions);
+					cli = RankCalculator.rankingBasedOnClightsAllocation(equalSizedCoalitions);
+					eq = RankCalculator.rankingBasedOnEqualAllocation(equalSizedCoalitions);
+					unirand = RankCalculator.rankingBasedOnUniformRandomAllocation(equalSizedCoalitions);
+					/*
+					long endTime = System.nanoTime();
+					long elapsedTime = endTime - startTime;
+					System.out.println(elapsedTime);
+					System.out.println("ranking time: " + ((double) elapsedTime/1_000_000_000) + " seconds");
+					*/
+					
+					RankCalculator.compareRanks(prop, ref);
+					RankCalculator.compareRanks(cea, ref);
+					RankCalculator.compareRanks(cel, ref);
+					RankCalculator.compareRanks(aprop, ref);
+					RankCalculator.compareRanks(shap, ref);
+					RankCalculator.compareRanks(tal, ref);
+					RankCalculator.compareRanks(mo, ref);
+					RankCalculator.compareRanks(cli, ref);
+					RankCalculator.compareRanks(eq, ref);
+					RankCalculator.compareRanks(unirand, ref);
+					
+					/*
+					eqCoalitionSRDs[0] = eqCoalitionSRDs[0] + sumRankingDifferences(prop);
+					eqCoalitionSRDs[1] = eqCoalitionSRDs[1] + sumRankingDifferences(cea);
+					eqCoalitionSRDs[2] = eqCoalitionSRDs[2] + sumRankingDifferences(cel);
+					eqCoalitionSRDs[3] = eqCoalitionSRDs[3] + sumRankingDifferences(aprop);
+					eqCoalitionSRDs[4] = eqCoalitionSRDs[4] + sumRankingDifferences(shap);
+					eqCoalitionSRDs[5] = eqCoalitionSRDs[5] + sumRankingDifferences(tal);
+					eqCoalitionSRDs[6] = eqCoalitionSRDs[6] + sumRankingDifferences(mo);
+					eqCoalitionSRDs[7] = eqCoalitionSRDs[7] + sumRankingDifferences(cli);
+					eqCoalitionSRDs[8] = eqCoalitionSRDs[8] + sumRankingDifferences(eq);
+					eqCoalitionSRDs[9] = eqCoalitionSRDs[9] + sumRankingDifferences(unirand);
+					*/
+					writeToConsoleAndFile(consoleOutput, fw, "\n" + (claimers.size() - i) + " member coalition\n");
+					writeToConsoleAndFile(consoleOutput, fw, "\nCoalitions\n");
+					for(Coalition entry : equalSizedCoalitions)
+					{
+						writeToConsoleAndFile(consoleOutput, fw, entry.getId() + " Claim: " + entry.coalitionClaim() + " REF: " + entry.getReference() + " PROP: " + entry.getProportionalAllocation()
+						+ " CEA: " + entry.getCEAAllocation()+ " CEL: " + entry.getCELAllocation() + " SHAP: " + entry.getShapleyValueAllocation()
+						+ " TAL: " + entry.getTalmudAllocation() + " MO: " + entry.getMinimalOverlappingAllocation() + " APROP: " + entry.getAdjustedProportionalAllocation()
+						+ " CLI: " + entry.getClightsAllocation() + " EQ: " + entry.getEqualAllocation() + " UNIRAND: " + entry.getUniformRandomAllocation() + "\n");
+					}
+
+					writeToConsoleAndFile(consoleOutput, fw, "\n");
+					for(CoalitionWithRankingDifference entry : ref)
+					{
+						writeToConsoleAndFile(consoleOutput, fw, "REF   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + "\n");
+					}
+
+					writeToConsoleAndFile(consoleOutput, fw, "\n");
+					for(CoalitionWithRankingDifference entry : prop)
+					{
+						writeToConsoleAndFile(consoleOutput, fw, "PROP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+					}
+					writeToConsoleAndFile(consoleOutput, fw, "sum of PROP ranking differences : " + sumRankingDifferences(prop) + "\n");
+
+					writeToConsoleAndFile(consoleOutput, fw, "\n");
+					for(CoalitionWithRankingDifference entry : cea)
+					{
+						writeToConsoleAndFile(consoleOutput, fw, "CEA   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+					}
+					writeToConsoleAndFile(consoleOutput, fw, "sum of CEA ranking differences : " + sumRankingDifferences(cea)+ "\n");
+					writeToConsoleAndFile(consoleOutput, fw, "\n");
+
+					for(CoalitionWithRankingDifference entry : cel)
+					{
+						writeToConsoleAndFile(consoleOutput, fw, "CEL   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+					}
+					writeToConsoleAndFile(consoleOutput, fw, "sum of CEL ranking differences : " + sumRankingDifferences(cel)+ "\n");
+					writeToConsoleAndFile(consoleOutput, fw, "\n");
+
+					for(CoalitionWithRankingDifference entry : aprop)
+					{
+						writeToConsoleAndFile(consoleOutput, fw, "APROP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+					}
+					writeToConsoleAndFile(consoleOutput, fw, "sum of APROP ranking differences : " + sumRankingDifferences(aprop) + "\n");
+					writeToConsoleAndFile(consoleOutput, fw, "\n");
+
+					for(CoalitionWithRankingDifference entry : shap)
+					{
+						writeToConsoleAndFile(consoleOutput, fw, "SHAP   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+					}	
+					writeToConsoleAndFile(consoleOutput, fw, "sum of SHAP ranking differences : " + sumRankingDifferences(shap) + "\n");
+					writeToConsoleAndFile(consoleOutput, fw, "\n");
+
+					for(CoalitionWithRankingDifference entry : tal)
+					{
+						writeToConsoleAndFile(consoleOutput, fw, "TAL   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+					}
+					writeToConsoleAndFile(consoleOutput, fw, "sum of TAL ranking differences : " + sumRankingDifferences(tal) + "\n");
+					writeToConsoleAndFile(consoleOutput, fw, "\n");
+
+					for(CoalitionWithRankingDifference entry : mo)
+					{
+						writeToConsoleAndFile(consoleOutput, fw, "MO   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+					}
+					writeToConsoleAndFile(consoleOutput, fw, "sum of MO ranking differences : " + sumRankingDifferences(mo) + "\n");
+					writeToConsoleAndFile(consoleOutput, fw, "\n");
+
+					for(CoalitionWithRankingDifference entry : cli)
+					{
+						writeToConsoleAndFile(consoleOutput, fw, "CLI   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+					}
+					writeToConsoleAndFile(consoleOutput, fw, "sum of CLI ranking differences : " + sumRankingDifferences(cli) + "\n");
+					writeToConsoleAndFile(consoleOutput, fw, "\n");
+
+					for(CoalitionWithRankingDifference entry : eq)
+					{
+						writeToConsoleAndFile(consoleOutput, fw, "EQ   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+					}
+					writeToConsoleAndFile(consoleOutput, fw, "sum of EQ ranking differences : " + sumRankingDifferences(eq) + "\n");
+					writeToConsoleAndFile(consoleOutput, fw, "\n");
+
+					for(CoalitionWithRankingDifference entry : unirand)
+					{
+						writeToConsoleAndFile(consoleOutput, fw, "UNIRAND   coalition: " + entry.getCoalition().getId() + " rank: " + entry.getRank() + " diff: " + entry.getRankingDifference() + "\n");
+					}
+					writeToConsoleAndFile(consoleOutput, fw, "sum of UNIRAND ranking differences : " + sumRankingDifferences(unirand) + "\n");
+					writeToConsoleAndFile(consoleOutput, fw, "\n");
+
+					
+				}
+				fw.close();
+			}
+			catch(IOException ex)
+			{
+				ex.printStackTrace();
+			}		
+
+			long endTimeRank = System.nanoTime();
+			long elapsedTimeRank = endTimeRank - startTimeRank;
+			// System.out.println(elapsedTimeRank);
+			System.out.println("ranking time: " + ((double) elapsedTimeRank/1_000_000_000) + " seconds");			
+		}
+		else
+		{
+			throw new InvalidEstateException("Estate is greater than the sum");
+		}		
 	}
 	
 	@SuppressWarnings("unchecked")

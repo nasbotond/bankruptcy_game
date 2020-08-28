@@ -40,19 +40,24 @@ public class MasterFrame extends JFrame
     	//Create the "cards".
         JPanel card1 = new JPanel();        
         card1.setBackground(Color.WHITE);
-        card1.add(tabbedCalculationPanel(false));
+        card1.add(tabbedCalculationPanel(false, false));
          
         JPanel card2 = new JPanel();
         card2.setBackground(Color.WHITE);
-        card2.add(tabbedCalculationPanel(true));
+        card2.add(tabbedCalculationPanel(true, false));
+        
+        JPanel card3 = new JPanel();
+        card3.setBackground(Color.WHITE);
+        card3.add(tabbedCalculationPanel(false, true));
          
         tabbedPane.addTab("VERSION A", card1);
         tabbedPane.addTab("VERSION B", card2);
+        tabbedPane.addTab("VERSION C", card3);
          
         pane.add(tabbedPane, BorderLayout.CENTER);
     }
     
-    private JComponent tabbedCalculationPanel(boolean isVersionB)
+    private JComponent tabbedCalculationPanel(boolean isVersionB, boolean isVersionC)
     {
     	JTabbedPane tabbedPane = new JTabbedPane();
 		tabbedPane.setFont(new Font("Serif", Font.PLAIN, 15));
@@ -62,11 +67,11 @@ public class MasterFrame extends JFrame
     	//Create the "cards".
         JPanel card1 = new JPanel();        
         card1.setBackground(Color.WHITE);
-        card1.add(new ExactCalculationPanel(isVersionB));
+        card1.add(new ExactCalculationPanel(isVersionB, isVersionC));
          
         JPanel card2 = new JPanel();
         card2.setBackground(Color.WHITE);
-        card2.add(new SimulationPanel(isVersionB));
+        card2.add(new SimulationPanel(isVersionB, isVersionC));
          
         tabbedPane.addTab("EXACT", card1);
         tabbedPane.addTab("SIMULATION", card2);
@@ -74,6 +79,7 @@ public class MasterFrame extends JFrame
         return tabbedPane;
     }
     
+    /*
     private void addComponentToPane(Container pane) 
     {
     	pane.setBackground(Color.WHITE);
@@ -95,5 +101,6 @@ public class MasterFrame extends JFrame
         tabbedPane.addTab("SIMULATION", card2);
          
         pane.add(tabbedPane, BorderLayout.CENTER);
-    }    
+    }  
+    */  
 }
