@@ -210,6 +210,10 @@ public class MainNoGUI extends CalculationPanel
 		System.out.println("running time: " + ((double) elapsedTime/1_000_000_000) + " seconds");
 		try 
 		{
+			saveToMinIO(true, "characteristic function", Integer.parseInt(args[0]), 
+					Double.parseDouble(args[1]), Double.parseDouble(args[2]),  iterations, System.getenv("MINIO_ENDPOINT"), 
+					System.getenv("MINIO_USERNAME"), System.getenv("MINIO_PASSWORD"), System.getenv("MINIO_BUCKET"));
+			/*
 			if(args.length == 4)
 			{
 				saveToFile(true, "characteristic function", Integer.parseInt(args[0]), 
@@ -218,8 +222,9 @@ public class MainNoGUI extends CalculationPanel
 			else
 			{
 				saveToMinIO(true, "characteristic function", Integer.parseInt(args[0]), 
-						Double.parseDouble(args[1]), Double.parseDouble(args[2]),  iterations, args[4], args[5], args[6]);
-			}			
+						Double.parseDouble(args[1]), Double.parseDouble(args[2]),  iterations, System.getenv("MINIO_ENDPOINT"), System.getenv("MINIO_USERNAME"), System.getenv("MINIO_PASSWORD"));
+			}	
+			*/		
 		}
 		catch(IOException | InvalidKeyException | NoSuchAlgorithmException | IllegalArgumentException ex)
 		{
@@ -333,25 +338,26 @@ public class MainNoGUI extends CalculationPanel
 	}
 	
 	private static void saveToMinIO(boolean versionB, String reference, int numAgents, double min, double max, int iterations, String endpoint,
-			String access_key, String secret) throws IOException, InvalidKeyException, NoSuchAlgorithmException, IllegalArgumentException 
+			String access_key, String secret, String bucket_name) throws IOException, InvalidKeyException, NoSuchAlgorithmException, IllegalArgumentException 
 	{		
-		String fileName;
+		String filename;
+		File output_file;
 		FileWriter fw;
 		if(!versionB)
 		{
-			fileName = "sim_versionA_ref-" + reference + "_numAgents-" + numAgents + "_percent-range-" + min + "-"
+			filename = "sim_versionA_ref-" + reference + "_numAgents-" + numAgents + "_percent-range-" + min + "-"
 					+ max + "_iter-" + iterations + ".txt";
-			fw = new FileWriter(new File(FileExtensionsPaths.TEMP_PATH, "sim_versionA_ref-" + reference + "_numAgents-" + numAgents + "_percent-range-" + min + "-"
-					+ max + "_iter-" + iterations + ".txt"));	
+			output_file = File.createTempFile(filename, ".txt");
+			fw = new FileWriter(output_file);	
 			fw.write("Version A\nreference: " + reference + "\nNumber of Creditors: " + numAgents + "\nRange min.: " + min
 					+ ", max.: " + max + "\niterations: " + iterations + "\n");
 		}
 		else
 		{
-			fileName = "sim_versionB_ref-" + reference + "_numAgents-" + numAgents + "_percent-range-" + min + "-"
+			filename = "sim_versionB_ref-" + reference + "_numAgents-" + numAgents + "_percent-range-" + min + "-"
 					+ max + "_iter-" + iterations + ".txt";
-			fw = new FileWriter(new File(FileExtensionsPaths.TEMP_PATH, "sim_versionB_ref-" + reference + "_numAgents-" + numAgents + "_percent-range-" + min + "-"
-					+ max + "_iter-" + iterations + ".txt"));
+			output_file = File.createTempFile(filename, ".txt");
+			fw = new FileWriter(output_file);
 			fw.write("Version B\nreference: " + reference + "\nNumber of Creditors: " + numAgents + "\nRange min.: " + min
 					+ ", max.: " + max + "\niterations: " + iterations + "\n");
 		}		 
@@ -371,32 +377,32 @@ public class MainNoGUI extends CalculationPanel
 		
 		try 
 		{
-		      // Create a minioClient with the MinIO server playground, its access key and secret key.
+		      // Create a minioClient with endpoint, its access key and secret key.
 		      MinioClient minioClient = MinioClient.builder()
 		    		  .endpoint(endpoint)
 		    		  .credentials(access_key, secret)
 		    		  .build();
 		      
-		      // Make 'asiatrip' bucket if not exist.
-		      boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket("simulation-results").build());
+		      // Make bucket if not exist.		  
+		      boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucket_name).build());
 		      if (!found) 
 		      {
-		        // Make a new bucket called 'asiatrip'.
-		        minioClient.makeBucket(MakeBucketArgs.builder().bucket("simulation-results").build());
+		        // Make a new bucket
+		        minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucket_name).build());
 		      } 
 		      else 
 		      {
-		        System.out.println("Bucket 'simulation-results' already exists.");
+		        System.out.println("Bucket " + bucket_name + " already exists.");
 		      }
 
-		      // Upload '/home/user/Photos/asiaphotos.zip' as object name 'asiaphotos-2015.zip' to bucket
-		      // 'asiatrip'.
+		      // Upload object to bucket
+		      System.out.println(output_file.getAbsolutePath());
 		      minioClient.uploadObject(UploadObjectArgs.builder()
-		    		  .bucket("simulation-results")
-		    		  .object(fileName)
-		    		  .filename(FileExtensionsPaths.TEMP_PATH + fileName)
+		    		  .bucket(bucket_name)
+		    		  .object(filename)
+		    		  .filename(output_file.getAbsolutePath())
 		    		  .build());
-		      System.out.println("output file is successfully uploaded");
+		      System.out.println("Output file is successfully uploaded");
 		} 
 		catch (MinioException e) 
 		{
